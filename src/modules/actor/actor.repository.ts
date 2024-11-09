@@ -14,4 +14,8 @@ export class ActorRepository {
       where: { person: { id: personId } },
     });
   }
+
+  async create(actor: Actor): Promise<Actor> {
+    return this.repository.save(actor);
+  }
 }
