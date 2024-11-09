@@ -8,6 +8,8 @@ import { Director } from './modules/director/director.entity';
 import { Actor } from './modules/actor/actor.entity';
 import { Person } from './modules/person/person.entity';
 
+import { MovieReviewModule } from './modules/movie-review/movie-review.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -21,6 +23,7 @@ import { Person } from './modules/person/person.entity';
       entities: [MovieReview, Movie, Director, Actor, Person],
       synchronize: true,
     }),
+    MovieReviewModule,
   ],
   controllers: [],
   providers: [],
