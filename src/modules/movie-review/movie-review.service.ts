@@ -1,6 +1,47 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+
+import { MovieReview } from './movie-review.entity';
+import { CreateMovieReviewDto } from './dtos/create-movie-review.dto';
+import { MovieReviewRepository } from './movie-review.repository';
+import { MovieReviewResponse } from './types/movie-review-response.types';
+
+import { MovieService } from '../movie/movie.service';
 
 @Injectable()
 export class MovieReviewService {
-  constructor() {}
+  constructor(
+    @Inject() private movieReviewRepository: MovieReviewRepository,
+    @Inject() private movieService: MovieService,
+  ) {}
+
+  async create(
+    movieReviewDto: CreateMovieReviewDto,
+  ): Promise<MovieReviewResponse> {
+    const movie = await this.movieService.findByTitleOrCreate(
+      movieReviewDto.title,
+    );
+
+    const movieReview = new MovieReview({
+      movie: movie,
+      notes: movieReviewDto.notes,
+    });
+
+    await this.movieReviewRepository
+      .create(movieReview)
+      .then((createdMovieReview) => {
+        movieReview.id = createdMovieReview.id;
+      });
+
+    return {
+      movieReviewId: movieReview.id,
+      title: movieReview.movie.title,
+      releaseDate: movieReview.movie.releaseDate,
+      rating: movieReview.movie.rating,
+      directors: movieReview.movie.directors.map(
+        (director) => director.person.name,
+      ),
+      actors: movieReview.movie.actors.map((actor) => actor.person.name),
+      notes: movieReview.notes,
+    };
+  }
 }

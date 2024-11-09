@@ -6,8 +6,10 @@ import { MovieReviewController } from './movie-review.controller';
 import { MovieReviewService } from './movie-review.service';
 import { MovieReviewRepository } from './movie-review.repository';
 
+import { MovieModule } from '../movie/movie.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([MovieReview])],
+  imports: [TypeOrmModule.forFeature([MovieReview]), MovieModule],
   controllers: [MovieReviewController],
   providers: [MovieReviewService, MovieReviewRepository],
 })
