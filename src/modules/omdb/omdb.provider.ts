@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { OmdbMovie } from './interfaces/omdb-movie.interface';
+import { OmdbMovieDetailed } from './interfaces/omdb-movie-detailed.interface';
 
 import { MovieNotFoundException } from '../../common/exceptions/movie-not-found-exception.filter';
 import { OmdbProviderRequestException } from '../../common/exceptions/omdb-provider-request-exception.filter';
@@ -23,6 +24,18 @@ export class OmdbProvider {
     }
 
     return response.Search;
+  }
+
+  async searchById(id: string): Promise<OmdbMovieDetailed> {
+    const queryParams = [{ key: 'i', value: id }];
+
+    const response = await this.fetchData(queryParams);
+
+    if (response.Error) {
+      throw new MovieNotFoundException();
+    }
+
+    return response;
   }
 
   async fetchData(queryParams: { key: string; value: string }[]) {
