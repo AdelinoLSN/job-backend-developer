@@ -11,4 +11,8 @@ export class OmdbService {
 
     return omdbItems.filter((item) => item.Type === 'movie');
   }
+
+  async searchMovieById(id: string) {
+    return this.omdbProvider.searchById(id);
+  }
 }
