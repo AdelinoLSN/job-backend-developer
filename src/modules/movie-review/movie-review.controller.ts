@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { CreateMovieReviewDto } from './dtos/create-movie-review.dto';
@@ -7,6 +14,12 @@ import { MovieReviewService } from './movie-review.service';
 @Controller('movie-reviews')
 export class MovieReviewController {
   constructor(private movieReviewsService: MovieReviewService) {}
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async findAll() {
+    return this.movieReviewsService.findAll();
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
