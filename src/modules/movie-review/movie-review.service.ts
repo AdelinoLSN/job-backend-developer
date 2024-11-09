@@ -14,6 +14,22 @@ export class MovieReviewService {
     @Inject() private movieService: MovieService,
   ) {}
 
+  async findAll(): Promise<MovieReviewResponse[]> {
+    const movieReviews = await this.movieReviewRepository.findAll();
+
+    return movieReviews.map((movieReview) => ({
+      movieReviewId: movieReview.id,
+      title: movieReview.movie.title,
+      releaseDate: movieReview.movie.releaseDate,
+      rating: movieReview.movie.rating,
+      directors: movieReview.movie.directors.map(
+        (director) => director.person.name,
+      ),
+      actors: movieReview.movie.actors.map((actor) => actor.person.name),
+      notes: movieReview.notes,
+    }));
+  }
+
   async create(
     movieReviewDto: CreateMovieReviewDto,
   ): Promise<MovieReviewResponse> {
