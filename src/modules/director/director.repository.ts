@@ -16,4 +16,8 @@ export class DirectorRepository {
       where: { person: { id: personId } },
     });
   }
+
+  async create(director: Director): Promise<Director> {
+    return this.repository.save(director);
+  }
 }
