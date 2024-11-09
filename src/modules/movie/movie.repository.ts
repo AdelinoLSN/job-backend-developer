@@ -14,4 +14,8 @@ export class MovieRepository {
       where: { title: title },
     });
   }
+
+  async create(movie: Movie): Promise<Movie> {
+    return await this.repository.save(movie);
+  }
 }
