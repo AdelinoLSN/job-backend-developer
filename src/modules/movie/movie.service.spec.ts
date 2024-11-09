@@ -2,13 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { MovieService } from './movie.service';
 import { MovieRepository } from './movie.repository';
+import { MultipleMoviesFoundException } from '../../common/exceptions/multiple-movies-found-exception.filter';
 
+import { OmdbMovie } from '../omdb/interfaces/omdb-movie.interface';
 import { OmdbService } from '../omdb/omdb.service';
 import { DirectorService } from '../director/director.service';
 import { ActorService } from '../actor/actor.service';
 
 describe(MovieService.name, () => {
   let movieService: MovieService;
+  let omdbService: OmdbService;
   let movieRepository: MovieRepository;
 
   beforeEach(async () => {
@@ -45,6 +48,7 @@ describe(MovieService.name, () => {
     }).compile();
 
     movieService = module.get<MovieService>(MovieService);
+    omdbService = module.get<OmdbService>(OmdbService);
     movieRepository = module.get<MovieRepository>(MovieRepository);
   });
 
@@ -67,5 +71,33 @@ describe(MovieService.name, () => {
     const result = await movieService.findByTitleOrCreate(title);
 
     expect(result).toEqual(movie);
+  });
+
+  it('should throw MultipleMoviesFoundException if multiple movies are found with different titles when calling findByTitleOrCreate without have any movie in database with that name', async () => {
+    const title = 'Inception';
+    const omdbMovies: OmdbMovie[] = [
+      {
+        Title: 'Inception 1',
+        imdbID: 'tt1375666',
+        Year: '2010',
+        Type: 'movie',
+      },
+      {
+        Title: 'Inception 2',
+        imdbID: 'tt0816692',
+        Year: '2014',
+        Type: 'movie',
+      },
+    ];
+
+    jest.spyOn(movieRepository, 'findOneByTitle').mockResolvedValue(null);
+
+    jest
+      .spyOn(omdbService, 'searchMoviesByTitle')
+      .mockResolvedValue(omdbMovies);
+
+    await expect(movieService.findByTitleOrCreate(title)).rejects.toThrow(
+      MultipleMoviesFoundException,
+    );
   });
 });
