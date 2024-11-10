@@ -13,6 +13,8 @@ describe(MovieService.name, () => {
   let movieService: MovieService;
   let omdbService: OmdbService;
   let movieRepository: MovieRepository;
+  let directorService: DirectorService;
+  let actorService: ActorService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -50,6 +52,8 @@ describe(MovieService.name, () => {
     movieService = module.get<MovieService>(MovieService);
     omdbService = module.get<OmdbService>(OmdbService);
     movieRepository = module.get<MovieRepository>(MovieRepository);
+    directorService = module.get<DirectorService>(DirectorService);
+    actorService = module.get<ActorService>(ActorService);
   });
 
   describe('findByTitleOrCreate', () => {
@@ -72,6 +76,61 @@ describe(MovieService.name, () => {
       const result = await movieService.findByTitleOrCreate(title);
 
       expect(result).toEqual(movie);
+    });
+
+    it('should create movie when the movie does not exist in database', async () => {
+      const title = 'Inception';
+      const omdbMovies: OmdbMovie[] = [
+        {
+          Title: 'Inception',
+          imdbID: 'tt1375666',
+          Year: '2010',
+          Type: 'movie',
+        },
+      ];
+      const omdbMovieDetailed = {
+        imdbID: omdbMovies[0].imdbID,
+        Title: omdbMovies[0].Title,
+        Released: '16 Jul 2010',
+        imdbRating: '8.8',
+        Director: 'Christopher Nolan',
+        Actors: 'Leonardo DiCaprio',
+      };
+
+      jest.spyOn(movieRepository, 'findOneByTitle').mockResolvedValue(null);
+      jest
+        .spyOn(omdbService, 'searchMoviesByTitle')
+        .mockResolvedValue(omdbMovies);
+      jest
+        .spyOn(omdbService, 'searchMovieById')
+        .mockResolvedValue(omdbMovieDetailed);
+      jest
+        .spyOn(directorService, 'findManyByNameOrCreate')
+        .mockResolvedValue([]);
+      jest.spyOn(actorService, 'findManyByNameOrCreate').mockResolvedValue([]);
+      jest.spyOn(movieRepository, 'create').mockResolvedValue({
+        id: 1,
+        imdbId: omdbMovieDetailed.imdbID,
+        title: omdbMovieDetailed.Title,
+        releaseDate: new Date(omdbMovieDetailed.Released),
+        rating: parseFloat(omdbMovieDetailed.imdbRating),
+        directors: [],
+        actors: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await movieService.findByTitleOrCreate(title);
+
+      expect(result).toEqual({
+        id: 1,
+        imdbId: omdbMovieDetailed.imdbID,
+        title: omdbMovieDetailed.Title,
+        releaseDate: expect.any(Date),
+        rating: parseFloat(omdbMovieDetailed.imdbRating),
+        directors: [],
+        actors: [],
+      });
     });
 
     it('should throw MultipleMoviesFoundException if multiple movies are found with different titles and does not exist on database', async () => {
