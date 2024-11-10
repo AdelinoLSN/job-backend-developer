@@ -3,10 +3,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { MovieReview } from './movie-review.entity';
 import { CreateMovieReviewDto } from './dtos/create-movie-review.dto';
 import { MovieReviewRepository } from './movie-review.repository';
-import { MovieReviewResponse } from './types/movie-review-response.types';
 
 import { MovieService } from '../movie/movie.service';
 import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
+import { MovieReviewResponseDto } from './dtos/movie-review-response.dto';
 
 @Injectable()
 export class MovieReviewService {
@@ -17,27 +17,19 @@ export class MovieReviewService {
 
   async findMany(
     findManyMovieReviewDto: FindManyMovieReviewDto,
-  ): Promise<MovieReviewResponse[]> {
+  ): Promise<MovieReviewResponseDto[]> {
     const movieReviews = await this.movieReviewRepository.findMany(
       findManyMovieReviewDto,
     );
 
-    return movieReviews.map((movieReview) => ({
-      movieReviewId: movieReview.id,
-      title: movieReview.movie.title,
-      releaseDate: movieReview.movie.releaseDate,
-      rating: movieReview.movie.rating,
-      directors: movieReview.movie.directors.map(
-        (director) => director.person.name,
-      ),
-      actors: movieReview.movie.actors.map((actor) => actor.person.name),
-      notes: movieReview.notes,
-    }));
+    return movieReviews.map((movieReview) =>
+      MovieReviewResponseDto.fromEntity(movieReview),
+    );
   }
 
   async create(
     movieReviewDto: CreateMovieReviewDto,
-  ): Promise<MovieReviewResponse> {
+  ): Promise<MovieReviewResponseDto> {
     const movie = await this.movieService.findByTitleOrCreate(
       movieReviewDto.title,
     );
@@ -53,16 +45,6 @@ export class MovieReviewService {
         movieReview.id = createdMovieReview.id;
       });
 
-    return {
-      movieReviewId: movieReview.id,
-      title: movieReview.movie.title,
-      releaseDate: movieReview.movie.releaseDate,
-      rating: movieReview.movie.rating,
-      directors: movieReview.movie.directors.map(
-        (director) => director.person.name,
-      ),
-      actors: movieReview.movie.actors.map((actor) => actor.person.name),
-      notes: movieReview.notes,
-    };
+    return MovieReviewResponseDto.fromEntity(movieReview);
   }
 }
