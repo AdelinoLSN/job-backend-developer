@@ -12,4 +12,10 @@ export class FindManyMovieReviewDto {
   @MinLength(3)
   @MaxLength(255)
   director?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(255)
+  actor?: string;
 }

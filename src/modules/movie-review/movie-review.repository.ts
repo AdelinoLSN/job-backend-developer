@@ -41,6 +41,17 @@ export class MovieReviewRepository {
       };
     }
 
+    if (findManyMovieReviewParams.actor) {
+      findManyOptions.where = {
+        ...findManyOptions.where,
+        movie: {
+          actors: {
+            person: { name: Like(`${findManyMovieReviewParams.actor}%`) },
+          },
+        },
+      };
+    }
+
     return await this.repository.find(findManyOptions);
   }
 
