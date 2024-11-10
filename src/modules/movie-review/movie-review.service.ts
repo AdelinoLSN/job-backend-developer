@@ -8,6 +8,8 @@ import { MovieService } from '../movie/movie.service';
 import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
 import { MovieReviewResponseDto } from './dtos/movie-review-response.dto';
 
+import { MovieReviewNotFoundException } from '../../common/exceptions/movie-review-not-found-exception.filter';
+
 @Injectable()
 export class MovieReviewService {
   constructor(
@@ -44,6 +46,16 @@ export class MovieReviewService {
       .then((createdMovieReview) => {
         movieReview.id = createdMovieReview.id;
       });
+
+    return MovieReviewResponseDto.fromEntity(movieReview);
+  }
+
+  async findOne(id: number): Promise<MovieReviewResponseDto> {
+    const movieReview = await this.movieReviewRepository.findOne(id);
+
+    if (!movieReview) {
+      throw new MovieReviewNotFoundException(id);
+    }
 
     return MovieReviewResponseDto.fromEntity(movieReview);
   }

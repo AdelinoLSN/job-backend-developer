@@ -78,4 +78,17 @@ export class MovieReviewRepository {
   async create(movieReview: MovieReview): Promise<MovieReview> {
     return await this.repository.save(movieReview);
   }
+
+  async findOne(id: number): Promise<MovieReview> {
+    return await this.repository.findOne({
+      where: { id },
+      relations: [
+        'movie',
+        'movie.directors',
+        'movie.actors',
+        'movie.directors.person',
+        'movie.actors.person',
+      ],
+    });
+  }
 }

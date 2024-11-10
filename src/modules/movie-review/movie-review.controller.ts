@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
@@ -12,6 +13,7 @@ import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateMovieReviewDto } from './dtos/create-movie-review.dto';
 import { MovieReviewService } from './movie-review.service';
 import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
+import { ParamIdMovieReviewDto } from './dtos/find-one-movie-review.dto';
 
 @Controller('movie-reviews')
 export class MovieReviewController {
@@ -75,5 +77,28 @@ export class MovieReviewController {
   })
   async create(@Body() createMovieReviewDto: CreateMovieReviewDto) {
     return this.movieReviewsService.create(createMovieReviewDto);
+  }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Find a movie review',
+    description: 'Find a movie review by id',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Movie review found',
+    example: {
+      movieReviewId: 1,
+      title: 'Inception',
+      releaseDate: '2010-07-16T00:00:00.000Z',
+      rating: 8.8,
+      directors: ['Christopher Nolan'],
+      actors: ['Leonardo DiCaprio', 'Joseph Gordon-Levitt', 'Ellen Page'],
+      notes: 'Great movie',
+    },
+  })
+  async findOne(@Param() paramIdMovieReviewDto: ParamIdMovieReviewDto) {
+    return this.movieReviewsService.findOne(paramIdMovieReviewDto.id);
   }
 }
