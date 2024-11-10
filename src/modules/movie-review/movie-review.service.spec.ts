@@ -88,18 +88,9 @@ describe(MovieReviewService.name, () => {
           deletedAt: null,
         },
       ];
-
-      const movieReviewsResponse = movieReviews.map((movieReview) => ({
-        movieReviewId: movieReview.id,
-        title: movieReview.movie.title,
-        releaseDate: movieReview.movie.releaseDate,
-        rating: movieReview.movie.rating,
-        directors: movieReview.movie.directors.map(
-          (director) => director.person.name,
-        ),
-        actors: movieReview.movie.actors.map((actor) => actor.person.name),
-        notes: movieReview.notes,
-      }));
+      const movieReviewsResponse = movieReviews.map((movieReview) =>
+        MovieReviewResponseDto.fromEntity(movieReview),
+      );
 
       jest
         .spyOn(movieReviewRepository, 'findMany')
@@ -155,17 +146,8 @@ describe(MovieReviewService.name, () => {
         deletedAt: null,
       };
 
-      const movieReviewResponse = {
-        movieReviewId: movieReview.id,
-        title: movieReview.movie.title,
-        releaseDate: movieReview.movie.releaseDate,
-        rating: movieReview.movie.rating,
-        directors: movieReview.movie.directors.map(
-          (director) => director.person.name,
-        ),
-        actors: movieReview.movie.actors.map((actor) => actor.person.name),
-        notes: movieReview.notes,
-      };
+      const movieReviewResponse =
+        MovieReviewResponseDto.fromEntity(movieReview);
 
       jest.spyOn(movieService, 'findByTitleOrCreate').mockResolvedValue(movie);
 
