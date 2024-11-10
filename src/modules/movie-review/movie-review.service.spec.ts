@@ -223,4 +223,19 @@ describe(MovieReviewService.name, () => {
       );
     });
   });
+
+  describe('update', () => {
+    it('should throw MovieReviewNotFoundException if movie review does not exist', async () => {
+      const id = 1;
+      const movieReviewDto = {
+        notes: 'Great movie',
+      };
+
+      jest.spyOn(movieReviewRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(
+        movieReviewService.update(id, movieReviewDto),
+      ).rejects.toThrow(MovieReviewNotFoundException);
+    });
+  });
 });
