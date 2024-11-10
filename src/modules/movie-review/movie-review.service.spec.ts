@@ -38,6 +38,14 @@ describe(MovieReviewService.name, () => {
   });
 
   describe('findAll', () => {
+    it('should return an empty array if there are no movie reviews', async () => {
+      jest.spyOn(movieReviewRepository, 'findAll').mockResolvedValue([]);
+
+      const result = await movieReviewService.findAll();
+
+      expect(result).toEqual([]);
+    });
+
     it('should return all movie reviews', async () => {
       const movieReviews = [
         {
