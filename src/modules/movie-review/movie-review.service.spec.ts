@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MovieReviewService } from './movie-review.service';
 import { MovieReviewRepository } from './movie-review.repository';
 import { MovieReviewResponseDto } from './dtos/movie-review-response.dto';
+import { MovieReviewNotFoundException } from '../../common/exceptions/movie-review-not-found-exception.filter';
 
 import { MovieService } from '../movie/movie.service';
 
@@ -210,6 +211,16 @@ describe(MovieReviewService.name, () => {
       const result = await movieReviewService.findOne(id);
 
       expect(result).toEqual(movieReviewResponse);
+    });
+
+    it('should throw MovieReviewNotFoundException if movie review does not exist', async () => {
+      const id = 1;
+
+      jest.spyOn(movieReviewRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(movieReviewService.findOne(id)).rejects.toThrow(
+        MovieReviewNotFoundException,
+      );
     });
   });
 });
