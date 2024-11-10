@@ -91,4 +91,8 @@ export class MovieReviewRepository {
       ],
     });
   }
+
+  async update(movieReview: MovieReview): Promise<MovieReview> {
+    return await this.repository.save(movieReview);
+  }
 }

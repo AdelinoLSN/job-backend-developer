@@ -5,12 +5,14 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { CreateMovieReviewDto } from './dtos/create-movie-review.dto';
+import { UpdateMovieReviewDto } from './dtos/update-movie-review.dto';
 import { MovieReviewService } from './movie-review.service';
 import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
 import { ParamIdMovieReviewDto } from './dtos/find-one-movie-review.dto';
@@ -100,5 +102,44 @@ export class MovieReviewController {
   })
   async findOne(@Param() paramIdMovieReviewDto: ParamIdMovieReviewDto) {
     return this.movieReviewsService.findOne(paramIdMovieReviewDto.id);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update a movie review',
+    description: 'Update a movie review by id',
+  })
+  @ApiBody({
+    type: UpdateMovieReviewDto,
+    examples: {
+      Inception: {
+        value: {
+          notes: 'Great movie',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Movie review updated',
+    example: {
+      movieReviewId: 1,
+      title: 'Inception',
+      releaseDate: '2010-07-16T00:00:00.000Z',
+      rating: 8.8,
+      directors: ['Christopher Nolan'],
+      actors: ['Leonardo DiCaprio', 'Joseph Gordon-Levitt', 'Ellen Page'],
+      notes: 'Great movie',
+    },
+  })
+  async update(
+    @Param() paramIdMovieReviewDto: ParamIdMovieReviewDto,
+    @Body() updateMovieReviewDto: UpdateMovieReviewDto,
+  ) {
+    return this.movieReviewsService.update(
+      paramIdMovieReviewDto.id,
+      updateMovieReviewDto,
+    );
   }
 }
