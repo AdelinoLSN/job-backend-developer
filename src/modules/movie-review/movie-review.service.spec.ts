@@ -39,14 +39,17 @@ describe(MovieReviewService.name, () => {
 
   describe('findMany', () => {
     it('should return an empty array if there are no movie reviews', async () => {
+      const findManyMovieReviewDto = {};
+
       jest.spyOn(movieReviewRepository, 'findMany').mockResolvedValue([]);
 
-      const result = await movieReviewService.findMany();
+      const result = await movieReviewService.findMany(findManyMovieReviewDto);
 
       expect(result).toEqual([]);
     });
 
     it('should return all movie reviews', async () => {
+      const findManyMovieReviewDto = {};
       const movieReviews = [
         {
           id: 1,
@@ -100,7 +103,7 @@ describe(MovieReviewService.name, () => {
         .spyOn(movieReviewRepository, 'findMany')
         .mockResolvedValue(movieReviews);
 
-      const result = await movieReviewService.findMany();
+      const result = await movieReviewService.findMany(findManyMovieReviewDto);
 
       expect(result).toEqual(movieReviewsResponse);
     });
