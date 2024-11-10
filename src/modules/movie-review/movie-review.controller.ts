@@ -19,6 +19,26 @@ export class MovieReviewController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Find movie reviews',
+    description:
+      'Find movie reviews. You can filter by title, director, or actor. You can also order by releaseDate or rating. And can paginate the results.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Movie reviews found',
+    example: [
+      {
+        movieReviewId: 1,
+        title: 'Inception',
+        releaseDate: '2010-07-16T00:00:00.000Z',
+        rating: 8.8,
+        directors: ['Christopher Nolan'],
+        actors: ['Leonardo DiCaprio', 'Joseph Gordon-Levitt', 'Ellen Page'],
+        notes: 'Great movie',
+      },
+    ],
+  })
   async findMany(@Query() findManyMovieReviewDto: FindManyMovieReviewDto) {
     return this.movieReviewsService.findMany(findManyMovieReviewDto);
   }
