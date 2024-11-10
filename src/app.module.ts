@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { MovieReview } from './modules/movie-review/movie-review.entity';
 import { Movie } from './modules/movie/movie.entity';
@@ -23,6 +24,7 @@ import { MovieReviewModule } from './modules/movie-review/movie-review.module';
       entities: [MovieReview, Movie, Director, Actor, Person],
       synchronize: true,
     }),
+    ScheduleModule.forRoot(),
     MovieReviewModule,
   ],
   controllers: [],
