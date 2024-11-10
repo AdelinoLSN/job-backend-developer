@@ -41,6 +41,7 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+.env.docker
 
 # temp directory
 .temp
@@ -58,3 +59,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # IDE
 .vscode
 .idea
+
+# Docker
+.docker
