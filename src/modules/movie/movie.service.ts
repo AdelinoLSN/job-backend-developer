@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { Movie } from './movie.entity';
 import { MovieRepository } from './movie.repository';
@@ -60,5 +61,48 @@ export class MovieService {
     });
 
     return movie;
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async updateMoviesRatings(): Promise<void> {
+    const limit = 10;
+    let offset = 0;
+
+    while (true) {
+      try {
+        const movies = await this.movieRepository.findMany(limit, offset);
+
+        if (movies.length === 0) {
+          break;
+        }
+
+        await Promise.all(
+          movies.map(async (movie) => {
+            const omdbMovie = await this.omdbService.searchMovieById(
+              movie.imdbId,
+            );
+
+            const omdbRating = parseFloat(omdbMovie.imdbRating);
+
+            if (parseFloat(movie.rating.toString()) === omdbRating) {
+              return;
+            }
+
+            movie.rating = omdbRating;
+
+            await this.movieRepository.update(movie);
+          }),
+        );
+
+        if (movies.length < limit) {
+          break;
+        }
+
+        offset += limit;
+      } catch (e) {
+        console.error(e);
+        break;
+      }
+    }
   }
 }
