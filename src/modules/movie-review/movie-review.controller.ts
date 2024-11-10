@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -141,5 +142,19 @@ export class MovieReviewController {
       paramIdMovieReviewDto.id,
       updateMovieReviewDto,
     );
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete a movie review',
+    description: 'Delete a movie review by id',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Movie review deleted',
+  })
+  async remove(@Param() paramIdMovieReviewDto: ParamIdMovieReviewDto) {
+    return this.movieReviewsService.remove(paramIdMovieReviewDto.id);
   }
 }

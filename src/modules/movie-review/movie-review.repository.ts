@@ -95,4 +95,8 @@ export class MovieReviewRepository {
   async update(movieReview: MovieReview): Promise<MovieReview> {
     return await this.repository.save(movieReview);
   }
+
+  async delete(id: number): Promise<void> {
+    await this.repository.softDelete(id);
+  }
 }

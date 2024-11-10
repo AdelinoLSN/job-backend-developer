@@ -74,4 +74,14 @@ export class MovieReviewService {
 
     return MovieReviewResponseDto.fromEntity(movieReview);
   }
+
+  async remove(id: number) {
+    const movieReview = await this.movieReviewRepository.findOne(id);
+
+    if (!movieReview) {
+      throw new MovieReviewNotFoundException(id);
+    }
+
+    await this.movieReviewRepository.delete(movieReview.id);
+  }
 }
