@@ -30,6 +30,17 @@ export class MovieReviewRepository {
       };
     }
 
+    if (findManyMovieReviewParams.director) {
+      findManyOptions.where = {
+        ...findManyOptions.where,
+        movie: {
+          directors: {
+            person: { name: Like(`${findManyMovieReviewParams.director}%`) },
+          },
+        },
+      };
+    }
+
     return await this.repository.find(findManyOptions);
   }
 
