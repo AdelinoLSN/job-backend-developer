@@ -352,5 +352,15 @@ describe(MovieReviewService.name, () => {
 
       expect(result).toEqual(undefined);
     });
+
+    it('should throw MovieReviewNotFoundException if movie review does not exist', async () => {
+      const id = 1;
+
+      jest.spyOn(movieReviewRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(movieReviewService.remove(id)).rejects.toThrow(
+        MovieReviewNotFoundException,
+      );
+    });
   });
 });
