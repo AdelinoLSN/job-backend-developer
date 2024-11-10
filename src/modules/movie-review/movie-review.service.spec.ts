@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { MovieReviewService } from './movie-review.service';
 import { MovieReviewRepository } from './movie-review.repository';
+import { MovieReviewResponseDto } from './dtos/movie-review-response.dto';
 
 import { MovieService } from '../movie/movie.service';
 
@@ -19,6 +20,7 @@ describe(MovieReviewService.name, () => {
           useValue: {
             findMany: jest.fn(),
             create: jest.fn(),
+            findOne: jest.fn(),
           },
         },
         {
@@ -172,6 +174,58 @@ describe(MovieReviewService.name, () => {
         .mockResolvedValue(movieReview);
 
       const result = await movieReviewService.create(movieReviewDto);
+
+      expect(result).toEqual(movieReviewResponse);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return a movie review', async () => {
+      const id = 1;
+
+      const movieReview = {
+        id,
+        notes: 'Great movie',
+        movie: {
+          id: 1,
+          imdbId: 'tt1375666',
+          title: 'Inception',
+          releaseDate: new Date('2010-07-16T00:00:00.000Z'),
+          rating: 8.8,
+          directors: [
+            {
+              id: 1,
+              person: {
+                id: 1,
+                name: 'Christopher Nolan',
+              },
+            },
+          ],
+          actors: [
+            {
+              id: 1,
+              person: {
+                id: 1,
+                name: 'Leonardo DiCaprio',
+              },
+            },
+          ],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      };
+
+      const movieReviewResponse =
+        MovieReviewResponseDto.fromEntity(movieReview);
+
+      jest
+        .spyOn(movieReviewRepository, 'findOne')
+        .mockResolvedValue(movieReview);
+
+      const result = await movieReviewService.findOne(id);
 
       expect(result).toEqual(movieReviewResponse);
     });
