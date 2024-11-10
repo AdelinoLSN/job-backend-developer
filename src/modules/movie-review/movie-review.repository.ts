@@ -52,6 +52,15 @@ export class MovieReviewRepository {
       };
     }
 
+    if (findManyMovieReviewParams.orderBy) {
+      findManyOptions.order = {
+        movie: {
+          [findManyMovieReviewParams.orderBy]:
+            findManyMovieReviewParams.order || 'ASC',
+        },
+      };
+    }
+
     return await this.repository.find(findManyOptions);
   }
 
