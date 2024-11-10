@@ -14,8 +14,8 @@ export class MovieReviewService {
     @Inject() private movieService: MovieService,
   ) {}
 
-  async findAll(): Promise<MovieReviewResponse[]> {
-    const movieReviews = await this.movieReviewRepository.findAll();
+  async findMany(): Promise<MovieReviewResponse[]> {
+    const movieReviews = await this.movieReviewRepository.findMany();
 
     return movieReviews.map((movieReview) => ({
       movieReviewId: movieReview.id,

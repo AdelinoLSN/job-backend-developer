@@ -10,7 +10,7 @@ export class MovieReviewRepository {
     @InjectRepository(MovieReview) private repository: Repository<MovieReview>,
   ) {}
 
-  async findAll(): Promise<MovieReview[]> {
+  async findMany(): Promise<MovieReview[]> {
     return await this.repository.find({
       relations: [
         'movie',

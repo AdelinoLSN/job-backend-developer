@@ -17,8 +17,8 @@ export class MovieReviewController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll() {
-    return this.movieReviewsService.findAll();
+  async findMany() {
+    return this.movieReviewsService.findMany();
   }
 
   @Post()

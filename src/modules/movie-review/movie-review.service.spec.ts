@@ -17,7 +17,7 @@ describe(MovieReviewService.name, () => {
         {
           provide: MovieReviewRepository,
           useValue: {
-            findAll: jest.fn(),
+            findMany: jest.fn(),
             create: jest.fn(),
           },
         },
@@ -37,11 +37,11 @@ describe(MovieReviewService.name, () => {
     movieService = module.get<MovieService>(MovieService);
   });
 
-  describe('findAll', () => {
+  describe('findMany', () => {
     it('should return an empty array if there are no movie reviews', async () => {
-      jest.spyOn(movieReviewRepository, 'findAll').mockResolvedValue([]);
+      jest.spyOn(movieReviewRepository, 'findMany').mockResolvedValue([]);
 
-      const result = await movieReviewService.findAll();
+      const result = await movieReviewService.findMany();
 
       expect(result).toEqual([]);
     });
@@ -97,10 +97,10 @@ describe(MovieReviewService.name, () => {
       }));
 
       jest
-        .spyOn(movieReviewRepository, 'findAll')
+        .spyOn(movieReviewRepository, 'findMany')
         .mockResolvedValue(movieReviews);
 
-      const result = await movieReviewService.findAll();
+      const result = await movieReviewService.findMany();
 
       expect(result).toEqual(movieReviewsResponse);
     });
