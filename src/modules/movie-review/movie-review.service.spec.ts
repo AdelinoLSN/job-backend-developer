@@ -17,6 +17,7 @@ describe(MovieReviewService.name, () => {
         {
           provide: MovieReviewRepository,
           useValue: {
+            findAll: jest.fn(),
             create: jest.fn(),
           },
         },
@@ -34,6 +35,67 @@ describe(MovieReviewService.name, () => {
       MovieReviewRepository,
     );
     movieService = module.get<MovieService>(MovieService);
+  });
+
+  describe('findAll', () => {
+    it('should return all movie reviews', async () => {
+      const movieReviews = [
+        {
+          id: 1,
+          notes: 'Great movie',
+          movie: {
+            id: 1,
+            imdbId: 'tt1375666',
+            title: 'Inception',
+            releaseDate: new Date('2010-07-16T00:00:00.000Z'),
+            rating: 8.8,
+            directors: [
+              {
+                id: 1,
+                person: {
+                  id: 1,
+                  name: 'Christopher Nolan',
+                },
+              },
+            ],
+            actors: [
+              {
+                id: 1,
+                person: {
+                  id: 1,
+                  name: 'Leonardo DiCaprio',
+                },
+              },
+            ],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ];
+
+      const movieReviewsResponse = movieReviews.map((movieReview) => ({
+        movieReviewId: movieReview.id,
+        title: movieReview.movie.title,
+        releaseDate: movieReview.movie.releaseDate,
+        rating: movieReview.movie.rating,
+        directors: movieReview.movie.directors.map(
+          (director) => director.person.name,
+        ),
+        actors: movieReview.movie.actors.map((actor) => actor.person.name),
+        notes: movieReview.notes,
+      }));
+
+      jest
+        .spyOn(movieReviewRepository, 'findAll')
+        .mockResolvedValue(movieReviews);
+
+      const result = await movieReviewService.findAll();
+
+      expect(result).toEqual(movieReviewsResponse);
+    });
   });
 
   describe('create', () => {
