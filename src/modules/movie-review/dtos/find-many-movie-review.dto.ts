@@ -1,6 +1,9 @@
+import { Transform } from 'class-transformer';
 import {
   IsEnum,
+  IsInt,
   IsOptional,
+  IsPositive,
   IsString,
   MaxLength,
   MinLength,
@@ -34,4 +37,16 @@ export class FindManyMovieReviewDto {
   @IsOptional()
   @IsEnum(['ASC', 'DESC'], { message: 'order must be ASC or DESC' })
   order?: 'ASC' | 'DESC';
+
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  @Transform(({ value }) => parseInt(value))
+  page?: number;
+
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  @Transform(({ value }) => parseInt(value))
+  limit?: number;
 }

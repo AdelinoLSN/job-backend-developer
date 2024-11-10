@@ -7,6 +7,8 @@ import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
 
 @Injectable()
 export class MovieReviewRepository {
+  private static readonly DEFAULT_LIMIT = 10;
+
   constructor(
     @InjectRepository(MovieReview) private repository: Repository<MovieReview>,
   ) {}
@@ -59,6 +61,15 @@ export class MovieReviewRepository {
             findManyMovieReviewParams.order || 'ASC',
         },
       };
+    }
+
+    if (findManyMovieReviewParams.page) {
+      findManyOptions.skip =
+        (findManyMovieReviewParams.page - 1) *
+        (findManyMovieReviewParams.limit ||
+          MovieReviewRepository.DEFAULT_LIMIT);
+      findManyOptions.take =
+        findManyMovieReviewParams.limit || MovieReviewRepository.DEFAULT_LIMIT;
     }
 
     return await this.repository.find(findManyOptions);
