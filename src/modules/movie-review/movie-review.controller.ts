@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
@@ -17,8 +18,10 @@ import { UpdateMovieReviewDto } from './dtos/update-movie-review.dto';
 import { MovieReviewService } from './movie-review.service';
 import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
 import { ParamIdMovieReviewDto } from './dtos/find-one-movie-review.dto';
+import { RequestLogInterceptor } from '../../common/interceptors/request-log.interceptor';
 
 @Controller('movie-reviews')
+@UseInterceptors(RequestLogInterceptor)
 export class MovieReviewController {
   constructor(private movieReviewsService: MovieReviewService) {}
 
