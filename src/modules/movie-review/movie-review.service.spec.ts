@@ -4,6 +4,7 @@ import { MovieReviewService } from './movie-review.service';
 import { MovieReviewRepository } from './movie-review.repository';
 import { MovieReviewResponseDto } from './dtos/movie-review-response.dto';
 import { MovieReviewNotFoundException } from '../../common/exceptions/movie-review-not-found-exception.filter';
+import { UpdateMovieReviewDto } from './dtos/update-movie-review.dto';
 
 import { MovieService } from '../movie/movie.service';
 
@@ -22,6 +23,7 @@ describe(MovieReviewService.name, () => {
             findMany: jest.fn(),
             create: jest.fn(),
             findOne: jest.fn(),
+            update: jest.fn(),
           },
         },
         {
@@ -225,6 +227,65 @@ describe(MovieReviewService.name, () => {
   });
 
   describe('update', () => {
+    it('should update a movie review', async () => {
+      const id = 1;
+      const movieReviewDto: UpdateMovieReviewDto = {
+        notes: 'Updated notes',
+      };
+
+      const movieReview = {
+        id,
+        notes: 'Great movie',
+        movie: {
+          id: 1,
+          imdbId: 'tt1375666',
+          title: 'Inception',
+          releaseDate: new Date('2010-07-16T00:00:00.000Z'),
+          rating: 8.8,
+          directors: [
+            {
+              id: 1,
+              person: {
+                id: 1,
+                name: 'Christopher Nolan',
+              },
+            },
+          ],
+          actors: [
+            {
+              id: 1,
+              person: {
+                id: 1,
+                name: 'Leonardo DiCaprio',
+              },
+            },
+          ],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      };
+
+      const movieReviewResponse = MovieReviewResponseDto.fromEntity({
+        ...movieReview,
+        notes: movieReviewDto.notes,
+      });
+
+      jest
+        .spyOn(movieReviewRepository, 'findOne')
+        .mockResolvedValue(movieReview);
+
+      jest
+        .spyOn(movieReviewRepository, 'update')
+        .mockResolvedValue(movieReview);
+
+      const result = await movieReviewService.update(id, movieReviewDto);
+
+      expect(result).toEqual(movieReviewResponse);
+    });
+
     it('should throw MovieReviewNotFoundException if movie review does not exist', async () => {
       const id = 1;
       const movieReviewDto = {
