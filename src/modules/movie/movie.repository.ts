@@ -25,4 +25,8 @@ export class MovieRepository {
   async create(movie: Movie): Promise<Movie> {
     return await this.repository.save(movie);
   }
+
+  async update(movie: Movie): Promise<Movie> {
+    return await this.repository.save(movie);
+  }
 }
