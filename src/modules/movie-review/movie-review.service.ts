@@ -6,6 +6,7 @@ import { MovieReviewRepository } from './movie-review.repository';
 import { MovieReviewResponse } from './types/movie-review-response.types';
 
 import { MovieService } from '../movie/movie.service';
+import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
 
 @Injectable()
 export class MovieReviewService {
@@ -14,8 +15,12 @@ export class MovieReviewService {
     @Inject() private movieService: MovieService,
   ) {}
 
-  async findMany(): Promise<MovieReviewResponse[]> {
-    const movieReviews = await this.movieReviewRepository.findMany();
+  async findMany(
+    findManyMovieReviewDto: FindManyMovieReviewDto,
+  ): Promise<MovieReviewResponse[]> {
+    const movieReviews = await this.movieReviewRepository.findMany(
+      findManyMovieReviewDto,
+    );
 
     return movieReviews.map((movieReview) => ({
       movieReviewId: movieReview.id,

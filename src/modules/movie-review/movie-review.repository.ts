@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Like, Repository } from 'typeorm';
 
 import { MovieReview } from './movie-review.entity';
+import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
 
 @Injectable()
 export class MovieReviewRepository {
@@ -10,8 +11,10 @@ export class MovieReviewRepository {
     @InjectRepository(MovieReview) private repository: Repository<MovieReview>,
   ) {}
 
-  async findMany(): Promise<MovieReview[]> {
-    return await this.repository.find({
+  async findMany(
+    findManyMovieReviewParams: FindManyMovieReviewDto,
+  ): Promise<MovieReview[]> {
+    const findManyOptions: FindManyOptions<MovieReview> = {
       relations: [
         'movie',
         'movie.directors',
@@ -19,7 +22,15 @@ export class MovieReviewRepository {
         'movie.directors.person',
         'movie.actors.person',
       ],
-    });
+    };
+
+    if (findManyMovieReviewParams.title) {
+      findManyOptions.where = {
+        movie: { title: Like(`${findManyMovieReviewParams.title}%`) },
+      };
+    }
+
+    return await this.repository.find(findManyOptions);
   }
 
   async create(movieReview: MovieReview): Promise<MovieReview> {

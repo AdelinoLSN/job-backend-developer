@@ -5,11 +5,13 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { CreateMovieReviewDto } from './dtos/create-movie-review.dto';
 import { MovieReviewService } from './movie-review.service';
+import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
 
 @Controller('movie-reviews')
 export class MovieReviewController {
@@ -17,8 +19,8 @@ export class MovieReviewController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findMany() {
-    return this.movieReviewsService.findMany();
+  async findMany(@Query() findManyMovieReviewDto: FindManyMovieReviewDto) {
+    return this.movieReviewsService.findMany(findManyMovieReviewDto);
   }
 
   @Post()
