@@ -24,6 +24,7 @@ describe(MovieReviewService.name, () => {
             create: jest.fn(),
             findOne: jest.fn(),
             update: jest.fn(),
+            delete: jest.fn(),
           },
         },
         {
@@ -297,6 +298,59 @@ describe(MovieReviewService.name, () => {
       await expect(
         movieReviewService.update(id, movieReviewDto),
       ).rejects.toThrow(MovieReviewNotFoundException);
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete a movie review', async () => {
+      const id = 1;
+
+      const movieReview = {
+        id,
+        notes: 'Great movie',
+        movie: {
+          id: 1,
+          imdbId: 'tt1375666',
+          title: 'Inception',
+          releaseDate: new Date('2010-07-16T00:00:00.000Z'),
+          rating: 8.8,
+          directors: [
+            {
+              id: 1,
+              person: {
+                id: 1,
+                name: 'Christopher Nolan',
+              },
+            },
+          ],
+          actors: [
+            {
+              id: 1,
+              person: {
+                id: 1,
+                name: 'Leonardo DiCaprio',
+              },
+            },
+          ],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      };
+
+      jest
+        .spyOn(movieReviewRepository, 'findOne')
+        .mockResolvedValue(movieReview);
+
+      jest
+        .spyOn(movieReviewRepository, 'update')
+        .mockResolvedValue(movieReview);
+
+      const result = await movieReviewService.remove(id);
+
+      expect(result).toEqual(undefined);
     });
   });
 });
