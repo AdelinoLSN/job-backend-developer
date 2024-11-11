@@ -427,5 +427,19 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
       expect(findOne).toBeNull();
     });
+
+    it('should return a 404 error when the movie review does not exist', () => {
+      const movieReviewId = faker.number.int();
+
+      return request(app.getHttpServer())
+        .delete(`/movie-reviews/${movieReviewId}`)
+        .expect(HttpStatus.NOT_FOUND)
+        .expect((res) => {
+          expect(res.body).toEqual({
+            statusCode: HttpStatus.NOT_FOUND,
+            message: `Movie review with id "${movieReviewId}" not found`,
+          });
+        });
+    });
   });
 });
