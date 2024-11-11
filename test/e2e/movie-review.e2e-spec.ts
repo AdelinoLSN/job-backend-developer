@@ -213,5 +213,43 @@ describe(`${MovieReview.name} (e2e)`, () => {
           });
         });
     });
+
+    it('should return a 409 error when trying to create a movie with a non full title and more than one result is found', () => {
+      const radicalTitle = faker.lorem.word();
+      const searchByTitleMock: OmdbMovie[] = [
+        {
+          Title: radicalTitle + faker.string.alpha({ length: 5 }),
+          Year: faker.date.past().getFullYear().toString(),
+          imdbID: faker.string.alphanumeric(9),
+          Type: 'movie',
+        },
+        {
+          Title: radicalTitle + faker.book.title(),
+          Year: faker.date.past().getFullYear().toString(),
+          imdbID: faker.string.alphanumeric(9),
+          Type: 'movie',
+        },
+      ];
+
+      const createMovieReviewDto: CreateMovieReviewDto = {
+        title: radicalTitle,
+        notes: faker.lorem.paragraph(),
+      };
+
+      jest
+        .spyOn(omdbProvider, 'searchByTitle')
+        .mockResolvedValue(searchByTitleMock);
+
+      return request(app.getHttpServer())
+        .post('/movie-reviews')
+        .send(createMovieReviewDto)
+        .expect(HttpStatus.CONFLICT)
+        .expect((res) => {
+          expect(res.body).toEqual({
+            statusCode: HttpStatus.CONFLICT,
+            message: `Multiple movies found for title "${createMovieReviewDto.title}": ${searchByTitleMock.map((movie) => `${movie.Title} (${movie.Year})`).join(', ')}`,
+          });
+        });
+    });
   });
 });
