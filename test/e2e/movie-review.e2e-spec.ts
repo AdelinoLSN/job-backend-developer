@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -64,5 +65,14 @@ describe(`${MovieReview.name} (e2e)`, () => {
     await DatabaseHelper.dropDatabase(dataSource, databaseName);
 
     await app.close();
+  });
+
+  describe('GET /movie-reviews', () => {
+    it('should return an empty array of movie reviews', () => {
+      return request(app.getHttpServer())
+        .get('/movie-reviews')
+        .expect(HttpStatus.OK)
+        .expect([]);
+    });
   });
 });
