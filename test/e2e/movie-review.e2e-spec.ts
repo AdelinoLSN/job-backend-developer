@@ -251,5 +251,75 @@ describe(`${MovieReview.name} (e2e)`, () => {
           });
         });
     });
+
+    it('should create a movie review when more than one result is found and the title is fully matched', () => {
+      const radicalTitle = faker.lorem.word();
+      const searchByTitleMock: OmdbMovie[] = [
+        {
+          Title: radicalTitle,
+          Year: faker.date.past().getFullYear().toString(),
+          imdbID: faker.string.alphanumeric(9),
+          Type: 'movie',
+        },
+        {
+          Title: radicalTitle + faker.book.title(),
+          Year: faker.date.past().getFullYear().toString(),
+          imdbID: faker.string.alphanumeric(9),
+          Type: 'movie',
+        },
+      ];
+
+      const searchByIdMock: OmdbMovieDetailed = {
+        imdbID: searchByTitleMock[0].imdbID,
+        Title: searchByTitleMock[0].Title,
+        Released: '16 Jul 2010',
+        Director: Array.from(
+          { length: faker.number.int({ min: 1, max: 3 }) },
+          () => faker.person.fullName(),
+        ).join(', '),
+        Actors: Array.from(
+          { length: faker.number.int({ min: 1, max: 3 }) },
+          () => faker.person.fullName(),
+        ).join(', '),
+        imdbRating: faker.number
+          .float({ min: 0, max: 10, fractionDigits: 1 })
+          .toString(),
+      };
+
+      const createMovieReviewDto: CreateMovieReviewDto = {
+        title: searchByTitleMock[0].Title,
+        notes: faker.lorem.paragraph(),
+      };
+
+      jest
+        .spyOn(omdbProvider, 'searchByTitle')
+        .mockResolvedValue(searchByTitleMock);
+
+      jest.spyOn(omdbProvider, 'searchById').mockResolvedValue(searchByIdMock);
+
+      return request(app.getHttpServer())
+        .post('/movie-reviews')
+        .send(createMovieReviewDto)
+        .expect(HttpStatus.CREATED)
+        .expect((res) => {
+          expect(res.body).toEqual({
+            movieReviewId: expect.any(Number),
+            title: createMovieReviewDto.title,
+            releaseDate: new Date(searchByIdMock.Released)
+              .toISOString()
+              .split('T')[0],
+            rating: parseFloat(searchByIdMock.imdbRating),
+            directors: expect.arrayContaining(
+              searchByIdMock.Director.split(', ').map((director) =>
+                director.trim(),
+              ),
+            ),
+            actors: expect.arrayContaining(
+              searchByIdMock.Actors.split(', ').map((actor) => actor.trim()),
+            ),
+            notes: createMovieReviewDto.notes,
+          });
+        });
+    });
   });
 });
