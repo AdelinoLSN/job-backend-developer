@@ -9,6 +9,7 @@ import { DatabaseHelper } from '../helpers/database.helper';
 
 import { MovieReviewModule } from '../../src/modules/movie-review/movie-review.module';
 import { MovieReview } from '../../src/modules/movie-review/movie-review.entity';
+import { MovieReviewFactory } from '../factories/movie-review.factory';
 import { Movie } from '../../src/modules/movie/movie.entity';
 import { Director } from '../../src/modules/director/director.entity';
 import { Actor } from '../../src/modules/actor/actor.entity';
@@ -19,6 +20,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let databaseName: string;
+  let factory: MovieReviewFactory;
 
   beforeAll(async () => {
     databaseName = 'movie_review_test_' + new Date().getTime();
@@ -55,6 +57,8 @@ describe(`${MovieReview.name} (e2e)`, () => {
     await app.init();
 
     dataSource = module.get<DataSource>(DataSource);
+
+    factory = new MovieReviewFactory(module);
   });
 
   beforeEach(async () => {
@@ -73,6 +77,31 @@ describe(`${MovieReview.name} (e2e)`, () => {
         .get('/movie-reviews')
         .expect(HttpStatus.OK)
         .expect([]);
+    });
+
+    it('should return an array of movie reviews', async () => {
+      const movieReviews = await factory.makeMany(3);
+
+      return request(app.getHttpServer())
+        .get('/movie-reviews')
+        .expect(HttpStatus.OK)
+        .expect((res) => {
+          expect(res.body).toEqual(
+            movieReviews.map((movieReview) => ({
+              movieReviewId: movieReview.id,
+              title: movieReview.movie.title,
+              releaseDate: movieReview.movie.releaseDate,
+              rating: movieReview.movie.rating,
+              directors: movieReview.movie.directors.map(
+                (director) => director.person.name,
+              ),
+              actors: movieReview.movie.actors.map(
+                (actor) => actor.person.name,
+              ),
+              notes: movieReview.notes,
+            })),
+          );
+        });
     });
   });
 });
