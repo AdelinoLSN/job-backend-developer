@@ -12,6 +12,7 @@ import { MovieReviewModule } from '../../src/modules/movie-review/movie-review.m
 import { MovieReview } from '../../src/modules/movie-review/movie-review.entity';
 import { MovieReviewFactory } from '../factories/movie-review.factory';
 import { CreateMovieReviewDto } from 'src/modules/movie-review/dtos/create-movie-review.dto';
+import { UpdateMovieReviewDto } from '../../src/modules/movie-review/dtos/update-movie-review.dto';
 import { Movie } from '../../src/modules/movie/movie.entity';
 import { Director } from '../../src/modules/director/director.entity';
 import { Actor } from '../../src/modules/actor/actor.entity';
@@ -359,6 +360,37 @@ describe(`${MovieReview.name} (e2e)`, () => {
           expect(res.body).toEqual({
             statusCode: HttpStatus.NOT_FOUND,
             message: `Movie review with id "${movieReviewId}" not found`,
+          });
+        });
+    });
+  });
+
+  describe('PATCH /movie-reviews/:id', () => {
+    it('should update a movie review', async () => {
+      const movieReview = await factory.make();
+      const updateMovieReviewDto: UpdateMovieReviewDto = {
+        notes: faker.lorem.paragraph(),
+      };
+
+      return request(app.getHttpServer())
+        .patch(`/movie-reviews/${movieReview.id}`)
+        .send(updateMovieReviewDto)
+        .expect(HttpStatus.OK)
+        .expect((res) => {
+          expect(res.body).toEqual({
+            movieReviewId: movieReview.id,
+            title: movieReview.movie.title,
+            releaseDate: movieReview.movie.releaseDate,
+            rating: movieReview.movie.rating,
+            directors: expect.arrayContaining(
+              movieReview.movie.directors.map(
+                (director) => director.person.name,
+              ),
+            ),
+            actors: expect.arrayContaining(
+              movieReview.movie.actors.map((actor) => actor.person.name),
+            ),
+            notes: updateMovieReviewDto.notes,
           });
         });
     });
