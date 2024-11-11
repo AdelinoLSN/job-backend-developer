@@ -394,5 +394,23 @@ describe(`${MovieReview.name} (e2e)`, () => {
           });
         });
     });
+
+    it('should return a 404 error when the movie review does not exist', () => {
+      const movieReviewId = faker.number.int();
+      const updateMovieReviewDto: UpdateMovieReviewDto = {
+        notes: faker.lorem.paragraph(),
+      };
+
+      return request(app.getHttpServer())
+        .patch(`/movie-reviews/${movieReviewId}`)
+        .send(updateMovieReviewDto)
+        .expect(HttpStatus.NOT_FOUND)
+        .expect((res) => {
+          expect(res.body).toEqual({
+            statusCode: HttpStatus.NOT_FOUND,
+            message: `Movie review with id "${movieReviewId}" not found`,
+          });
+        });
+    });
   });
 });
