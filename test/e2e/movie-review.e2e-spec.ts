@@ -103,5 +103,16 @@ describe(`${MovieReview.name} (e2e)`, () => {
           );
         });
     });
+
+    it('should return an empty array of movie reviews when the unique movie review is deleted', async () => {
+      const movieReview = await factory.make();
+
+      await factory.softDelete(movieReview.id);
+
+      return request(app.getHttpServer())
+        .get('/movie-reviews')
+        .expect(HttpStatus.OK)
+        .expect([]);
+    });
   });
 });
