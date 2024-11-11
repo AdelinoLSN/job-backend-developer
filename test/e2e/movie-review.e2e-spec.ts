@@ -322,4 +322,31 @@ describe(`${MovieReview.name} (e2e)`, () => {
         });
     });
   });
+
+  describe('GET /movie-reviews/:id', () => {
+    it('should return a movie review', async () => {
+      const movieReview = await factory.make();
+
+      return request(app.getHttpServer())
+        .get(`/movie-reviews/${movieReview.id}`)
+        .expect(HttpStatus.OK)
+        .expect((res) => {
+          expect(res.body).toEqual({
+            movieReviewId: movieReview.id,
+            title: movieReview.movie.title,
+            releaseDate: movieReview.movie.releaseDate,
+            rating: movieReview.movie.rating,
+            directors: expect.arrayContaining(
+              movieReview.movie.directors.map(
+                (director) => director.person.name,
+              ),
+            ),
+            actors: expect.arrayContaining(
+              movieReview.movie.actors.map((actor) => actor.person.name),
+            ),
+            notes: movieReview.notes,
+          });
+        });
+    });
+  });
 });
