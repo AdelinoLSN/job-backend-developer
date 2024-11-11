@@ -186,5 +186,32 @@ describe(`${MovieReview.name} (e2e)`, () => {
           });
         });
     });
+
+    it('should create a movie review for a movie that already exists', async () => {
+      const movieReview = await factory.make();
+
+      const createMovieReviewDto: CreateMovieReviewDto = {
+        title: movieReview.movie.title,
+        notes: faker.lorem.paragraph(),
+      };
+
+      return request(app.getHttpServer())
+        .post('/movie-reviews')
+        .send(createMovieReviewDto)
+        .expect(HttpStatus.CREATED)
+        .expect((res) => {
+          expect(res.body).toEqual({
+            movieReviewId: expect.any(Number),
+            title: createMovieReviewDto.title,
+            releaseDate: movieReview.movie.releaseDate,
+            rating: movieReview.movie.rating,
+            directors: movieReview.movie.directors.map(
+              (director) => director.person.name,
+            ),
+            actors: movieReview.movie.actors.map((actor) => actor.person.name),
+            notes: createMovieReviewDto.notes,
+          });
+        });
+    });
   });
 });
