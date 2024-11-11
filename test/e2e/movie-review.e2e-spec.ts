@@ -413,4 +413,19 @@ describe(`${MovieReview.name} (e2e)`, () => {
         });
     });
   });
+
+  describe('DELETE /movie-reviews/:id', () => {
+    it('should delete a movie review', async () => {
+      const movieReview = await factory.make();
+
+      await request(app.getHttpServer())
+        .delete(`/movie-reviews/${movieReview.id}`)
+        .expect(HttpStatus.NO_CONTENT)
+        .expect({});
+
+      const findOne = await factory.findOne(movieReview.id);
+
+      expect(findOne).toBeNull();
+    });
+  });
 });
