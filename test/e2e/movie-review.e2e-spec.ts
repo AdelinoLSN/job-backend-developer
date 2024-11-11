@@ -4,21 +4,26 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { faker } from '@faker-js/faker';
 
 import { DatabaseHelper } from '../helpers/database.helper';
 
 import { MovieReviewModule } from '../../src/modules/movie-review/movie-review.module';
 import { MovieReview } from '../../src/modules/movie-review/movie-review.entity';
 import { MovieReviewFactory } from '../factories/movie-review.factory';
+import { CreateMovieReviewDto } from 'src/modules/movie-review/dtos/create-movie-review.dto';
 import { Movie } from '../../src/modules/movie/movie.entity';
 import { Director } from '../../src/modules/director/director.entity';
 import { Actor } from '../../src/modules/actor/actor.entity';
 import { Person } from '../../src/modules/person/person.entity';
 import { OmdbProvider } from '../../src/modules/omdb/omdb.provider';
+import { OmdbMovie } from 'src/modules/omdb/interfaces/omdb-movie.interface';
+import { OmdbMovieDetailed } from 'src/modules/omdb/interfaces/omdb-movie-detailed.interface';
 
 describe(`${MovieReview.name} (e2e)`, () => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let omdbProvider: OmdbProvider;
   let databaseName: string;
   let factory: MovieReviewFactory;
 
@@ -55,6 +60,8 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
     app = module.createNestApplication();
     await app.init();
+
+    omdbProvider = module.get<OmdbProvider>(OmdbProvider);
 
     dataSource = module.get<DataSource>(DataSource);
 
@@ -113,6 +120,71 @@ describe(`${MovieReview.name} (e2e)`, () => {
         .get('/movie-reviews')
         .expect(HttpStatus.OK)
         .expect([]);
+    });
+  });
+
+  describe('POST /movie-reviews', () => {
+    it('should create a movie review', () => {
+      const searchByTitleMock: OmdbMovie[] = [
+        {
+          Title: faker.book.title(),
+          Year: faker.date.past().getFullYear().toString(),
+          imdbID: faker.string.alphanumeric(9),
+          Type: 'movie',
+        },
+      ];
+
+      const searchByIdMock: OmdbMovieDetailed = {
+        imdbID: searchByTitleMock[0].imdbID,
+        Title: searchByTitleMock[0].Title,
+        Released: '16 Jul 2010',
+        Director: Array.from(
+          { length: faker.number.int({ min: 1, max: 3 }) },
+          () => faker.person.fullName(),
+        ).join(', '),
+        Actors: Array.from(
+          { length: faker.number.int({ min: 1, max: 3 }) },
+          () => faker.person.fullName(),
+        ).join(', '),
+        imdbRating: faker.number
+          .float({ min: 0, max: 10, fractionDigits: 1 })
+          .toString(),
+      };
+
+      const createMovieReviewDto: CreateMovieReviewDto = {
+        title: searchByTitleMock[0].Title,
+        notes: faker.lorem.paragraph(),
+      };
+
+      jest
+        .spyOn(omdbProvider, 'searchByTitle')
+        .mockResolvedValue(searchByTitleMock);
+
+      jest.spyOn(omdbProvider, 'searchById').mockResolvedValue(searchByIdMock);
+
+      return request(app.getHttpServer())
+        .post('/movie-reviews')
+        .send(createMovieReviewDto)
+        .expect(HttpStatus.CREATED)
+        .expect((res) => {
+          expect(res.body).toEqual({
+            movieReviewId: expect.any(Number),
+            title: createMovieReviewDto.title,
+            releaseDate: new Date(searchByIdMock.Released)
+              .toISOString()
+              .split('T')[0],
+            rating: parseFloat(searchByIdMock.imdbRating),
+            directors: expect.arrayContaining(
+              searchByIdMock.Director.split(', ').map((director) =>
+                director.trim(),
+              ),
+            ),
+            actors: expect.arrayContaining(
+              searchByIdMock.Actors.split(', ').map((actor) => actor.trim()),
+            ),
+            notes: createMovieReviewDto.notes,
+          });
+        });
     });
   });
 });
