@@ -1,4 +1,4 @@
-# Dolado: Teste prático para Backend
+<!-- # Dolado: Teste prático para Backend
 
 ## Introdução
 Este é o teste que nós da [Dolado](http://www.dolado.com.br) usamos para avaliar os candidatos de vagas para Backend. Do júnior ao sênior, todos são avaliados pelo mesmo teste mas por critérios distintos. Se você estiver participando de um processo seletivo para nossa equipe, certamente em algum momento receberá este link, mas caso você tenha chego aqui "por acaso", sinta-se convidado a desenvolver nosso teste e enviar uma mensagem para nós no e-mail `tech@dolado.com.br`.
@@ -120,4 +120,61 @@ apikey: aa9290ba
 * Histórico de commits do git
 * As instruções de como rodar o projeto
 * Organização, semântica, estrutura, legibilidade, manutenibilidade do seu código
-* Alcance dos objetivos propostos
+* Alcance dos objetivos propostos -->
+
+# Dolado: Teste prático para Backend
+
+### Como foi a experiência no decorrer de todo o processo de desenvolvimento?
+
+O fato do projeto ser o mesmo independentemente do nível do candidato, é uma ótima forma de instigar o candidato a tentar incorporar o máximo de técnicas e boas práticas que ele possua em seu arsenal. O que me fez pensar bastante em como estruturar a base de dados e a própria organização de pastas antes de começar.
+
+A experiência em si foi desafiadora, pois tive que aprender a utilizar o _NestJS_ e o _TypeORM_, o que foi muito interessante, pois o _TypeORM_ é uma ferramenta que eu ainda não tive a oportunidade de atuar profissionalmente, pelo menos não o quanto gostaria. Entender todas as facilidade e dificuldades que ferramentas com esse nível de maturidade proporcionaram foi de grande valia e no começo me consumiu um tempo considerável no planejamento do projeto junto a essas ferramentas.
+
+### Quais foram as principais decisões tomadas?
+
+A primeira decisão tomada teve relação com a base de dados, entender como modelar a estrutura de forma a atender os objetivos utilizando tudo que o _TypeORM_ tem a oferecer e também tudo que ele pode me limitar.
+
+Um exemplo foi a relação `ManyToMany` que não poderia possuir campos customizados (colunas com valores além dos relacionamentos na tabela pivô) sem torna-la uma entidade própria e a fim de evitar utilização de _query builder_ e _raw query_ na aplicação, optei por criar um relacionamento `OneToMany` entre _Movie_ e _Actor_ e _Director_, que me permitiu criar um `ManyToMany` entre _Movie_ e _Person_ e assim conseguir buscar os atores e diretores de um filme de forma mais simples, claro, sempre relacionando _Director_ e _Actor_ com _Person_ por meio de um relacionamento `OneToOne` a fim de evitar duplicidade de dados, afinal, não são raros os casos de um ator ser também diretor.
+
+Uma outra decisão foi relacionada ao módulo de contagem de visualizações de reviews de filmes, onde optei por criar uma entidade a parte para evitar que a entidade _MovieReview_ tivesse seus metadados atualizados a cada visualização, optei então por criar uma entidade fraca _MovieReviewView_ que possui um relacionamento `OneToOne` com _MovieReview_ e um campo `count` para essa contagem.
+
+O funcionamento dessa contagem ocorre via o _interceptor_ `IncrementMovieReviewViewsInterceptor` que intercepta a requisição de visualização de um review e em caso de sucesso, adiciona a uma fila de processamento essas visualizações.
+
+Sendo _MovieReviewView_ uma entidade fraca, utilizar somente o código para gerenciar a criação e posterior atualização poderia gerar questões de problemas de concorrência, então optei por utilizar o conceito de fila com o _Redis_ e o _BullMQ_ para gerenciar a contagem de visual, onde a cada visualização, uma mensagem é adicionada a fila e um _worker_ é responsável por processar essas mensagens e atualizar a contagem de visualizações em ordem para evitar os problemas já citados. 
+
+Outra relevante decisão foi relacionada a organização do projeto, optei por separar na organização de módulos, onde cada pasta na página `modulos/` possui um módulo, _controller_ (caso necessário), _service_, _entity_, seus testes unitários uma abstração para o _repository_ do TypeORM que me daria mais flexibilidade para implementar repositórios customizados sem que o `service` tenha conhecimento de como o `_TypeORM_` está implementando a persistência.
+
+Um ponto de questionamento foi relacionado aos testes unitários ficarem juntos dos arquivos que estão sendo testados, o que me fez questionar se não seria melhor separar os testes em uma pasta própria, mas optei por manter juntos, pois acredito que dada estrutura que eu gostaria de passar que é de realmente cada pasta de `modules/` ser um módulo com começo, meio e fim, julguei que faria mais sentido manter os testes juntos dos arquivos que estão sendo testados.
+
+Por outro lado, os testes de integração foram adicinados à pasta de `test/` na raiz do projeto, pois eles testam múltiplos módulos e não apenas um, por mais que os arquivos sejam organizados baseados em cima de um _controller_ de um módulo específico, então julguei que essa separação seria necessária. Obviamente veio a dúvida posterior sobre organizar os testes de integração em uma pasta própria dentro de `test/`, mas no fim, acredito que a organização atual expressaria melhor a forma como eu entendi a estrutura mais conveniente para o projeto.
+
+### Como foi organizado o projeto em termos de estrutura de pastas e arquivos?
+
+Como já mencionado, a organização foi feita em módulos, onde cada pasta na página `modulos/` possui um módulo, _controller_ (caso necessário), _service_, _entity_, seus testes unitários uma abstração para o _repository_ do TypeORM que me dar mais flexibilidade para implementar repositórios customizados sem que o `service` tenha conhecimento de como o `_TypeORM_` está implementando a persistência.
+
+Em detalhes, a estrutura de pastas ficou da seguinte forma:
+
+* `src/` - Pasta contendo todo o código fonte
+    * `common/` - Pasta contendo arquivos comuns a toda a aplicação
+        * `exceptions/` - Pasta contendo exceções customizadas
+        * `interceptors/` - Pasta contendo interceptors customizados
+    * `modules/` - Pasta contendo os módulos da aplicação separados por entidade
+        * `${nomeDaEntidade}/` - Pasta contendo o módulo da entidade
+            * `${nomeDaEntidade}.module.ts` - Módulo da entidade
+            * `${nomeDaEntidade}.controller.ts` - Controller da entidade (caso necessário)
+            * `${nomeDaEntidade}.entity.ts` - Entidade da entidade
+            * `${nomeDaEntidade}.service.ts` - Service da entidade
+            * `${nomeDaEntidade}.service.spec.ts` - Testes unitários do service da entidade
+* `test/` - Pasta com os testes de integração
+    * `helpers/` - Pasta com funções auxiliares para os testes
+    * `factories/` - Pasta com factories para criação de entidades para os testes
+    * `e2e/` - Pasta com os testes de integração
+        * `${nomeDaEntidade}.e2e-spec.ts` - Testes de integração da entidade
+
+### Instruções de como rodar o projeto.
+
+O projeto foi desenvolvido para que possa ser rodado diretamente ou por meio de um container _Docker_.
+
+Para rodar o projeto diretamente, é necessário ter o _Node_, _MySQL_ e o _Redis_ instalados na máquina. Após clonar o repositório, é necessário instalar as dependências do projeto com o comando `npm install`, realizar um cópia do arquivo `.env.example` para `.env` e preencher as variáveis de ambiente necessárias (banco de dados, Redis e chave da API do OMDB). Após isso, basta rodar o comando `npm run start:dev` para rodar o projeto em modo de desenvolvimento, ou `npm run build` e `npm run start:prod` para rodar em modo de produção.
+
+Para rodar o projeto por meio de um container _Docker_, é necessário ter o _Docker_ e o _Docker Compose_ instalados na máquina. Após clonar o repositório, também é necessário copiar o arquivo `.env.dovker.example` para `.env.docker` e preencher as variáveis de ambiente necessárias (chave da API do OMDB). Após isso, basta rodar o comando `docker-compose up` para iniciar os containers da aplicação e do banco de dados. Os arquivos de persistência do banco de dados ficarão na pasta `.docker/db/` e o projeto estará disponível por padrão em `http://localhost:3000`.
