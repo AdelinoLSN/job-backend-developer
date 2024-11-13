@@ -11,6 +11,21 @@ export class MovieReviewViewRepository {
     private movieReviewViewRepository: Repository<MovieReviewView>,
   ) {}
 
+  async findMostViewed() {
+    return this.movieReviewViewRepository.find({
+      relations: [
+        'movieReview',
+        'movieReview.movie',
+        'movieReview.movie.directors',
+        'movieReview.movie.actors',
+        'movieReview.movie.directors.person',
+        'movieReview.movie.actors.person',
+      ],
+      order: { count: 'DESC' },
+      take: 10,
+    });
+  }
+
   async create(data: Partial<MovieReviewView>) {
     await this.movieReviewViewRepository.save(data);
   }
