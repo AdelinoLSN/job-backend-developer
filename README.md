@@ -1,4 +1,4 @@
-# Dolado: Teste prático para Backend
+<!-- # Dolado: Teste prático para Backend
 
 ## Introdução
 Este é o teste que nós da [Dolado](http://www.dolado.com.br) usamos para avaliar os candidatos de vagas para Backend. Do júnior ao sênior, todos são avaliados pelo mesmo teste mas por critérios distintos. Se você estiver participando de um processo seletivo para nossa equipe, certamente em algum momento receberá este link, mas caso você tenha chego aqui "por acaso", sinta-se convidado a desenvolver nosso teste e enviar uma mensagem para nós no e-mail `tech@dolado.com.br`.
@@ -120,4 +120,4 @@ apikey: aa9290ba
 * Histórico de commits do git
 * As instruções de como rodar o projeto
 * Organização, semântica, estrutura, legibilidade, manutenibilidade do seu código
-* Alcance dos objetivos propostos
+* Alcance dos objetivos propostos -->
