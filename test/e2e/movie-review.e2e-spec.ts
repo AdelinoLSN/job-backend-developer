@@ -3,6 +3,7 @@ import * as request from 'supertest';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BullModule } from '@nestjs/bullmq';
 import { DataSource } from 'typeorm';
 import { faker } from '@faker-js/faker';
 
@@ -48,6 +49,11 @@ describe(`${MovieReview.name} (e2e)`, () => {
           database: databaseName,
           entities: [MovieReview, Movie, Director, Actor, Person],
           synchronize: true,
+        }),
+        BullModule.forRoot({
+          connection: {
+            url: process.env.REDIS_URL,
+          },
         }),
         MovieReviewModule,
       ],
