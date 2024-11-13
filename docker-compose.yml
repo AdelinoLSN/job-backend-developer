@@ -15,6 +15,7 @@ services:
       - DB_NAME=movie_review
     depends_on:
       - db
+      - redis
 
   db:
     image: mysql:8.0
@@ -27,3 +28,10 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: movie_review
+
+  redis:
+    image: redis:7.2
+    container_name: redis-movie-review
+    restart: always
+    ports:
+      - "6379:6379"
