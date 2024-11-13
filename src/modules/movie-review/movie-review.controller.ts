@@ -19,6 +19,7 @@ import { MovieReviewService } from './movie-review.service';
 import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
 import { ParamIdMovieReviewDto } from './dtos/find-one-movie-review.dto';
 import { RequestLogInterceptor } from '../../common/interceptors/request-log.interceptor';
+import { IncrementMovieReviewViewInterceptor } from '../../common/interceptors/increment-movie-review-views.interceptor';
 
 @Controller('movie-reviews')
 @UseInterceptors(RequestLogInterceptor)
@@ -87,6 +88,7 @@ export class MovieReviewController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(IncrementMovieReviewViewInterceptor)
   @ApiOperation({
     summary: 'Find a movie review',
     description: 'Find a movie review by id',
