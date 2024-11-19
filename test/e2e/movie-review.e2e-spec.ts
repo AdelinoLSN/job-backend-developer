@@ -18,14 +18,14 @@ import { Movie } from '../../src/modules/movie/movie.entity';
 import { Director } from '../../src/modules/director/director.entity';
 import { Actor } from '../../src/modules/actor/actor.entity';
 import { Person } from '../../src/modules/person/person.entity';
-import { OmdbProvider } from '../../src/modules/omdb/omdb.provider';
-import { OmdbMovie } from 'src/modules/omdb/interfaces/omdb-movie.interface';
-import { OmdbMovieDetailed } from 'src/modules/omdb/interfaces/omdb-movie-detailed.interface';
+import { MovieDatabaseProvider } from '../../src/modules/movie-database/movie-database.provider';
+import { MovieDatabaseMovie } from '../../src/modules/movie-database/types/movie-database-movie.types';
+import { MovieDatabaseMovieDetails } from '../../src/modules/movie-database/types/movie-database-movie-details.types';
 
 describe(`${MovieReview.name} (e2e)`, () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let omdbProvider: OmdbProvider;
+  let movieDatabaseProvider: MovieDatabaseProvider;
   let databaseName: string;
   let factory: MovieReviewFactory;
 
@@ -58,7 +58,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
         MovieReviewModule,
       ],
     })
-      .overrideProvider(OmdbProvider)
+      .overrideProvider(MovieDatabaseProvider)
       .useValue({
         searchByTitle: jest.fn(),
         searchById: jest.fn(),
@@ -68,7 +68,9 @@ describe(`${MovieReview.name} (e2e)`, () => {
     app = module.createNestApplication();
     await app.init();
 
-    omdbProvider = module.get<OmdbProvider>(OmdbProvider);
+    movieDatabaseProvider = module.get<MovieDatabaseProvider>(
+      MovieDatabaseProvider,
+    );
 
     dataSource = module.get<DataSource>(DataSource);
 
@@ -132,7 +134,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
   describe('POST /movie-reviews', () => {
     it('should create a movie review', () => {
-      const searchByTitleMock: OmdbMovie[] = [
+      const searchByTitleMock: MovieDatabaseMovie[] = [
         {
           Title: faker.book.title(),
           Year: faker.date.past().getFullYear().toString(),
@@ -141,7 +143,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
         },
       ];
 
-      const searchByIdMock: OmdbMovieDetailed = {
+      const searchByIdMock: MovieDatabaseMovieDetails = {
         imdbID: searchByTitleMock[0].imdbID,
         Title: searchByTitleMock[0].Title,
         Released: '16 Jul 2010',
@@ -164,10 +166,12 @@ describe(`${MovieReview.name} (e2e)`, () => {
       };
 
       jest
-        .spyOn(omdbProvider, 'searchByTitle')
+        .spyOn(movieDatabaseProvider, 'searchByTitle')
         .mockResolvedValue(searchByTitleMock);
 
-      jest.spyOn(omdbProvider, 'searchById').mockResolvedValue(searchByIdMock);
+      jest
+        .spyOn(movieDatabaseProvider, 'searchById')
+        .mockResolvedValue(searchByIdMock);
 
       return request(app.getHttpServer())
         .post('/movie-reviews')
@@ -223,7 +227,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
     it('should return a 409 error when trying to create a movie with a non full title and more than one result is found', () => {
       const radicalTitle = faker.lorem.word();
-      const searchByTitleMock: OmdbMovie[] = [
+      const searchByTitleMock: MovieDatabaseMovie[] = [
         {
           Title: radicalTitle + faker.string.alpha({ length: 5 }),
           Year: faker.date.past().getFullYear().toString(),
@@ -244,7 +248,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
       };
 
       jest
-        .spyOn(omdbProvider, 'searchByTitle')
+        .spyOn(movieDatabaseProvider, 'searchByTitle')
         .mockResolvedValue(searchByTitleMock);
 
       return request(app.getHttpServer())
@@ -261,7 +265,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
     it('should create a movie review when more than one result is found and the title is fully matched', () => {
       const radicalTitle = faker.lorem.word();
-      const searchByTitleMock: OmdbMovie[] = [
+      const searchByTitleMock: MovieDatabaseMovie[] = [
         {
           Title: radicalTitle,
           Year: faker.date.past().getFullYear().toString(),
@@ -276,7 +280,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
         },
       ];
 
-      const searchByIdMock: OmdbMovieDetailed = {
+      const searchByIdMock: MovieDatabaseMovieDetails = {
         imdbID: searchByTitleMock[0].imdbID,
         Title: searchByTitleMock[0].Title,
         Released: '16 Jul 2010',
@@ -299,10 +303,12 @@ describe(`${MovieReview.name} (e2e)`, () => {
       };
 
       jest
-        .spyOn(omdbProvider, 'searchByTitle')
+        .spyOn(movieDatabaseProvider, 'searchByTitle')
         .mockResolvedValue(searchByTitleMock);
 
-      jest.spyOn(omdbProvider, 'searchById').mockResolvedValue(searchByIdMock);
+      jest
+        .spyOn(movieDatabaseProvider, 'searchById')
+        .mockResolvedValue(searchByIdMock);
 
       return request(app.getHttpServer())
         .post('/movie-reviews')
