@@ -1,20 +1,19 @@
 import { Injectable } from '@nestjs/common';
 
-import { OmdbMovie } from './interfaces/omdb-movie.interface';
-import { OmdbMovieDetailed } from './interfaces/omdb-movie-detailed.interface';
+import { MovieDatabaseProvider } from './movie-database.provider';
 
 import { MovieNotFoundException } from '../../common/exceptions/movie-not-found-exception.filter';
 import { OmdbProviderRequestException } from '../../common/exceptions/omdb-provider-request-exception.filter';
 
 @Injectable()
-export class OmdbProvider {
-  private omdbUrl: string;
+export class OpenMovieDatabaseProvider implements MovieDatabaseProvider {
+  private openMovieDatabaseUrl: string;
 
   constructor() {
-    this.omdbUrl = `${process.env.OMDB_BASE_URL}?apikey=${process.env.OMDB_API_KEY}&`;
+    this.openMovieDatabaseUrl = `${process.env.OMDB_BASE_URL}?apikey=${process.env.OMDB_API_KEY}&`;
   }
 
-  async searchByTitle(title: string): Promise<OmdbMovie[]> {
+  async searchByTitle(title: string): Promise<any[]> {
     const queryParams = [{ key: 's', value: title }];
 
     const response = await this.fetchData(queryParams);
@@ -26,7 +25,7 @@ export class OmdbProvider {
     return response.Search;
   }
 
-  async searchById(id: string): Promise<OmdbMovieDetailed> {
+  async searchById(id: string): Promise<any> {
     const queryParams = [{ key: 'i', value: id }];
 
     const response = await this.fetchData(queryParams);
@@ -38,10 +37,10 @@ export class OmdbProvider {
     return response;
   }
 
-  async fetchData(queryParams: { key: string; value: string }[]) {
+  async fetchData(queryParams: { key: string; value: string }[]): Promise<any> {
     try {
       const url =
-        this.omdbUrl +
+        this.openMovieDatabaseUrl +
         queryParams.map((param) => `${param.key}=${param.value}`).join('&');
 
       const response = await fetch(url);

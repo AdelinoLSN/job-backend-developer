@@ -4,7 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Movie } from './movie.entity';
 import { MovieRepository } from './movie.repository';
 
-import { OmdbService } from '../omdb/omdb.service';
+import { MovieDatabaseService } from '../movie-database/movie-database.service';
 import { DirectorService } from '../director/director.service';
 import { ActorService } from '../actor/actor.service';
 
@@ -14,7 +14,7 @@ import { MultipleMoviesFoundException } from '../../common/exceptions/multiple-m
 export class MovieService {
   constructor(
     @Inject() private movieRepository: MovieRepository,
-    @Inject() private omdbService: OmdbService,
+    @Inject() private movieDatabaseService: MovieDatabaseService,
     @Inject() private directorService: DirectorService,
     @Inject() private actorService: ActorService,
   ) {}
@@ -30,13 +30,14 @@ export class MovieService {
   }
 
   private async createMovie(title: string): Promise<Movie> {
-    const omdbMovies = await this.omdbService.searchMoviesByTitle(title);
+    const omdbMovies =
+      await this.movieDatabaseService.searchMoviesByTitle(title);
 
     if (omdbMovies[0].Title !== title && omdbMovies.length > 1) {
       throw new MultipleMoviesFoundException(title, omdbMovies);
     }
 
-    const omdbMovie = await this.omdbService.searchMovieById(
+    const omdbMovie = await this.movieDatabaseService.searchMovieById(
       omdbMovies[0].imdbID,
     );
 
@@ -78,7 +79,7 @@ export class MovieService {
 
         await Promise.all(
           movies.map(async (movie) => {
-            const omdbMovie = await this.omdbService.searchMovieById(
+            const omdbMovie = await this.movieDatabaseService.searchMovieById(
               movie.imdbId,
             );
 

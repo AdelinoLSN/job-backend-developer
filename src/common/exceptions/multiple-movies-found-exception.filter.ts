@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-import { OmdbMovie } from '../../modules/omdb/interfaces/omdb-movie.interface';
+import { MovieDatabaseMovie } from '../../modules/movie-database/types/movie-database-movie.types';
 
 export class MultipleMoviesFoundException extends HttpException {
-  constructor(title: string, movies: OmdbMovie[]) {
+  constructor(title: string, movies: MovieDatabaseMovie[]) {
     super(
       `Multiple movies found for title "${title}": ${movies
         .map((movie) => {
