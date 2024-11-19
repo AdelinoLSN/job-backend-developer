@@ -4,14 +4,15 @@ import { MovieService } from './movie.service';
 import { MovieRepository } from './movie.repository';
 import { MultipleMoviesFoundException } from '../../common/exceptions/multiple-movies-found-exception.filter';
 
-import { OmdbMovie } from '../omdb/interfaces/omdb-movie.interface';
-import { OmdbService } from '../omdb/omdb.service';
+import { MovieDatabaseService } from '../movie-database/movie-database.service';
 import { DirectorService } from '../director/director.service';
 import { ActorService } from '../actor/actor.service';
+import { Movie } from './movie.entity';
+import { MovieDatabaseMovie } from '../movie-database/types/movie-database-movie.types';
 
 describe(MovieService.name, () => {
   let movieService: MovieService;
-  let omdbService: OmdbService;
+  let movieDatabaseService: MovieDatabaseService;
   let movieRepository: MovieRepository;
   let directorService: DirectorService;
   let actorService: ActorService;
@@ -28,7 +29,7 @@ describe(MovieService.name, () => {
           },
         },
         {
-          provide: OmdbService,
+          provide: MovieDatabaseService,
           useValue: {
             searchMoviesByTitle: jest.fn(),
             searchMovieById: jest.fn(),
@@ -50,7 +51,8 @@ describe(MovieService.name, () => {
     }).compile();
 
     movieService = module.get<MovieService>(MovieService);
-    omdbService = module.get<OmdbService>(OmdbService);
+    movieDatabaseService =
+      module.get<MovieDatabaseService>(MovieDatabaseService);
     movieRepository = module.get<MovieRepository>(MovieRepository);
     directorService = module.get<DirectorService>(DirectorService);
     actorService = module.get<ActorService>(ActorService);
@@ -59,7 +61,7 @@ describe(MovieService.name, () => {
   describe('findByTitleOrCreate', () => {
     it('should return movie from database when the movie exists in database', async () => {
       const title = 'Inception';
-      const movie = {
+      const movie = new Movie({
         id: 1,
         imdbId: 'tt1375666',
         title: 'Inception',
@@ -69,7 +71,7 @@ describe(MovieService.name, () => {
         actors: [],
         createdAt: new Date(),
         updatedAt: new Date(),
-      };
+      });
 
       jest.spyOn(movieRepository, 'findOneByTitle').mockResolvedValue(movie);
 
@@ -80,7 +82,7 @@ describe(MovieService.name, () => {
 
     it('should create movie when the movie does not exist in database', async () => {
       const title = 'Inception';
-      const omdbMovies: OmdbMovie[] = [
+      const movieDatabaseMovies: MovieDatabaseMovie[] = [
         {
           Title: 'Inception',
           imdbID: 'tt1375666',
@@ -88,9 +90,9 @@ describe(MovieService.name, () => {
           Type: 'movie',
         },
       ];
-      const omdbMovieDetailed = {
-        imdbID: omdbMovies[0].imdbID,
-        Title: omdbMovies[0].Title,
+      const movieDatabaseMovieDetail = {
+        imdbID: movieDatabaseMovies[0].imdbID,
+        Title: movieDatabaseMovies[0].Title,
         Released: '16 Jul 2010',
         imdbRating: '8.8',
         Director: 'Christopher Nolan',
@@ -99,21 +101,21 @@ describe(MovieService.name, () => {
 
       jest.spyOn(movieRepository, 'findOneByTitle').mockResolvedValue(null);
       jest
-        .spyOn(omdbService, 'searchMoviesByTitle')
-        .mockResolvedValue(omdbMovies);
+        .spyOn(movieDatabaseService, 'searchMoviesByTitle')
+        .mockResolvedValue(movieDatabaseMovies);
       jest
-        .spyOn(omdbService, 'searchMovieById')
-        .mockResolvedValue(omdbMovieDetailed);
+        .spyOn(movieDatabaseService, 'searchMovieById')
+        .mockResolvedValue(movieDatabaseMovieDetail);
       jest
         .spyOn(directorService, 'findManyByNameOrCreate')
         .mockResolvedValue([]);
       jest.spyOn(actorService, 'findManyByNameOrCreate').mockResolvedValue([]);
       jest.spyOn(movieRepository, 'create').mockResolvedValue({
         id: 1,
-        imdbId: omdbMovieDetailed.imdbID,
-        title: omdbMovieDetailed.Title,
-        releaseDate: new Date(omdbMovieDetailed.Released),
-        rating: parseFloat(omdbMovieDetailed.imdbRating),
+        imdbId: movieDatabaseMovieDetail.imdbID,
+        title: movieDatabaseMovieDetail.Title,
+        releaseDate: new Date(movieDatabaseMovieDetail.Released),
+        rating: parseFloat(movieDatabaseMovieDetail.imdbRating),
         directors: [],
         actors: [],
         createdAt: new Date(),
@@ -124,10 +126,10 @@ describe(MovieService.name, () => {
 
       expect(result).toEqual({
         id: 1,
-        imdbId: omdbMovieDetailed.imdbID,
-        title: omdbMovieDetailed.Title,
+        imdbId: movieDatabaseMovieDetail.imdbID,
+        title: movieDatabaseMovieDetail.Title,
         releaseDate: expect.any(Date),
-        rating: parseFloat(omdbMovieDetailed.imdbRating),
+        rating: parseFloat(movieDatabaseMovieDetail.imdbRating),
         directors: [],
         actors: [],
       });
@@ -135,7 +137,7 @@ describe(MovieService.name, () => {
 
     it('should throw MultipleMoviesFoundException if multiple movies are found with different titles and does not exist on database', async () => {
       const title = 'Inception';
-      const omdbMovies: OmdbMovie[] = [
+      const movieDatabaseMovies: MovieDatabaseMovie[] = [
         {
           Title: 'Inception 1',
           imdbID: 'tt1375666',
@@ -153,8 +155,8 @@ describe(MovieService.name, () => {
       jest.spyOn(movieRepository, 'findOneByTitle').mockResolvedValue(null);
 
       jest
-        .spyOn(omdbService, 'searchMoviesByTitle')
-        .mockResolvedValue(omdbMovies);
+        .spyOn(movieDatabaseService, 'searchMoviesByTitle')
+        .mockResolvedValue(movieDatabaseMovies);
 
       await expect(movieService.findByTitleOrCreate(title)).rejects.toThrow(
         MultipleMoviesFoundException,
