@@ -8,6 +8,7 @@ import { MovieReviewRepository } from './movie-review.repository';
 
 import { MovieModule } from '../movie/movie.module';
 import { MovieReviewViewModule } from '../movie-review-view/movie-review-view.module';
+import { TypeOrmMovieReviewRepository } from './typeorm-movie-review.repository';
 
 @Module({
   imports: [
@@ -16,7 +17,13 @@ import { MovieReviewViewModule } from '../movie-review-view/movie-review-view.mo
     forwardRef(() => MovieReviewViewModule),
   ],
   controllers: [MovieReviewController],
-  providers: [MovieReviewService, MovieReviewRepository],
+  providers: [
+    MovieReviewService,
+    {
+      provide: MovieReviewRepository,
+      useClass: TypeOrmMovieReviewRepository,
+    },
+  ],
   exports: [MovieReviewRepository],
 })
 export class MovieReviewModule {}
