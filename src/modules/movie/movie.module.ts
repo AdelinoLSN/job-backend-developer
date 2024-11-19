@@ -8,6 +8,7 @@ import { MovieRepository } from './movie.repository';
 import { OmdbModule } from '../omdb/omdb.module';
 import { DirectorModule } from '../director/director.module';
 import { ActorModule } from '../actor/actor.module';
+import { TypeOrmMovieRepository } from './typeorm-movie.repository';
 
 @Module({
   imports: [
@@ -17,7 +18,13 @@ import { ActorModule } from '../actor/actor.module';
     ActorModule,
   ],
   controllers: [],
-  providers: [MovieService, MovieRepository],
+  providers: [
+    MovieService,
+    {
+      provide: MovieRepository,
+      useClass: TypeOrmMovieRepository,
+    },
+  ],
   exports: [MovieService],
 })
 export class MovieModule {}
