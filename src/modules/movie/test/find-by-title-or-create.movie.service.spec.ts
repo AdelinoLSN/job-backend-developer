@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { MovieService } from './movie.service';
-import { MovieRepository } from './movie.repository';
-import { MultipleMoviesFoundException } from '../../common/exceptions/multiple-movies-found-exception.filter';
+import { MovieService } from '../movie.service';
+import { MovieRepository } from '../movie.repository';
+import { MultipleMoviesFoundException } from '../../../common/exceptions/multiple-movies-found-exception.filter';
 
-import { MovieDatabaseService } from '../movie-database/movie-database.service';
-import { DirectorService } from '../director/director.service';
-import { ActorService } from '../actor/actor.service';
-import { Movie } from './movie.entity';
-import { MovieDatabaseMovie } from '../movie-database/types/movie-database-movie.types';
+import { MovieDatabaseService } from '../../movie-database/movie-database.service';
+import { DirectorService } from '../../director/director.service';
+import { ActorService } from '../../actor/actor.service';
+import { Movie } from '../movie.entity';
+import { MovieDatabaseMovie } from '../../movie-database/types/movie-database-movie.types';
 
 describe(MovieService.name, () => {
   let movieService: MovieService;
