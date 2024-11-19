@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { MovieDatabaseProvider } from './movie-database.provider';
 
 import { MovieNotFoundException } from '../../common/exceptions/movie-not-found-exception.filter';
-import { OmdbProviderRequestException } from '../../common/exceptions/omdb-provider-request-exception.filter';
+import { OpenMovieDatabaseRequestException } from '../../common/exceptions/open-movie-database-request-exception.filter';
 
 @Injectable()
 export class OpenMovieDatabaseProvider implements MovieDatabaseProvider {
@@ -48,7 +48,7 @@ export class OpenMovieDatabaseProvider implements MovieDatabaseProvider {
 
       return data;
     } catch (error) {
-      throw new OmdbProviderRequestException(error);
+      throw new OpenMovieDatabaseRequestException(error);
     }
   }
 }
