@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { MovieReview } from './movie-review.entity';
+import { MovieReviewFactory } from './movie-review.factory';
 import { CreateMovieReviewDto } from './dtos/create-movie-review.dto';
 import { MovieReviewRepository } from './movie-review.repository';
 
@@ -13,8 +14,10 @@ import { UpdateMovieReviewDto } from './dtos/update-movie-review.dto';
 @Injectable()
 export class MovieReviewService {
   constructor(
-    @Inject() private movieReviewRepository: MovieReviewRepository,
-    @Inject() private movieService: MovieService,
+    @Inject(MovieReviewFactory) private movieReviewFactory: MovieReviewFactory,
+    @Inject(MovieReviewRepository)
+    private movieReviewRepository: MovieReviewRepository,
+    @Inject(MovieService) private movieService: MovieService,
   ) {}
 
   async findMany(
@@ -32,7 +35,7 @@ export class MovieReviewService {
       movieReviewDto.title,
     );
 
-    const movieReview = new MovieReview({
+    const movieReview = this.movieReviewFactory.create({
       movie: movie,
       notes: movieReviewDto.notes,
     });
