@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { faker } from '@faker-js/faker/.';
 
+import { MovieReview } from '../movie-review.entity';
+import { MovieReviewFactory } from '../movie-review.factory';
 import { MovieReviewService } from '../movie-review.service';
 import { MovieReviewRepository } from '../movie-review.repository';
-import { MovieReview } from '../movie-review.entity';
 import { CreateMovieReviewDto } from '../dtos/create-movie-review.dto';
 
 import { MovieService } from '../../movie/movie.service';
@@ -19,6 +20,7 @@ describe('MovieReviewService', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        MovieReviewFactory,
         MovieReviewService,
         {
           provide: MovieReviewRepository,

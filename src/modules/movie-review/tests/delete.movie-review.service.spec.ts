@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { faker } from '@faker-js/faker/.';
 
+import { MovieReview } from '../movie-review.entity';
+import { MovieReviewFactory } from '../movie-review.factory';
 import { MovieReviewService } from '../movie-review.service';
 import { MovieReviewRepository } from '../movie-review.repository';
 import { MovieReviewNotFoundException } from '../../../common/exceptions/movie-review-not-found-exception.filter';
@@ -14,6 +16,7 @@ describe(MovieReviewService.name, () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        MovieReviewFactory,
         MovieReviewService,
         {
           provide: MovieReviewRepository,
@@ -43,7 +46,7 @@ describe(MovieReviewService.name, () => {
     it('should delete a movie review', async () => {
       const id = 1;
 
-      const movieReview = {
+      const movieReview: MovieReview = {
         id,
         notes: faker.lorem.sentence(),
         movie: {

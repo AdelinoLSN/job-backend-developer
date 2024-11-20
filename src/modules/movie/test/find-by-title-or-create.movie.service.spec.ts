@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { faker } from '@faker-js/faker/.';
 
+import { Movie } from '../movie.entity';
+import { MovieFactory } from '../movie.factory';
 import { MovieService } from '../movie.service';
 import { MovieRepository } from '../movie.repository';
 import { MultipleMoviesFoundException } from '../../../common/exceptions/multiple-movies-found-exception.filter';
@@ -8,7 +10,6 @@ import { MultipleMoviesFoundException } from '../../../common/exceptions/multipl
 import { MovieDatabaseService } from '../../movie-database/movie-database.service';
 import { DirectorService } from '../../director/director.service';
 import { ActorService } from '../../actor/actor.service';
-import { Movie } from '../movie.entity';
 import { MovieDatabaseMovie } from '../../movie-database/types/movie-database-movie.types';
 import { OpenMovieDatabaseRequestException } from '../../../common/exceptions/open-movie-database-request-exception.filter';
 
@@ -22,6 +23,7 @@ describe(MovieService.name, () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        MovieFactory,
         MovieService,
         {
           provide: MovieRepository,
@@ -63,7 +65,7 @@ describe(MovieService.name, () => {
   describe('findByTitleOrCreate', () => {
     it('should return movie from database when the movie exists in database', async () => {
       const title = faker.book.title();
-      const movie = new Movie({
+      const movie: Movie = {
         id: faker.number.int(),
         imdbId: faker.string.alphanumeric(9),
         title: title,
@@ -73,7 +75,7 @@ describe(MovieService.name, () => {
         actors: [],
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      };
 
       jest.spyOn(movieRepository, 'findOneByTitle').mockResolvedValue(movie);
 
