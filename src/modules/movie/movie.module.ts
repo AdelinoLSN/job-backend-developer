@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Movie } from './movie.entity';
+import { MovieFactory } from './movie.factory';
 import { MovieService } from './movie.service';
 import { MovieRepository } from './movie.repository';
 
@@ -19,6 +20,7 @@ import { TypeOrmMovieRepository } from './typeorm-movie.repository';
   ],
   controllers: [],
   providers: [
+    MovieFactory,
     MovieService,
     {
       provide: MovieRepository,

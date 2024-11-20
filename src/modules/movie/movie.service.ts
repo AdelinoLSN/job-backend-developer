@@ -9,14 +9,17 @@ import { DirectorService } from '../director/director.service';
 import { ActorService } from '../actor/actor.service';
 
 import { MultipleMoviesFoundException } from '../../common/exceptions/multiple-movies-found-exception.filter';
+import { MovieFactory } from './movie.factory';
 
 @Injectable()
 export class MovieService {
   constructor(
-    @Inject() private movieRepository: MovieRepository,
-    @Inject() private movieDatabaseService: MovieDatabaseService,
-    @Inject() private directorService: DirectorService,
-    @Inject() private actorService: ActorService,
+    @Inject(MovieFactory) private movieFactory: MovieFactory,
+    @Inject(MovieRepository) private movieRepository: MovieRepository,
+    @Inject(MovieDatabaseService)
+    private movieDatabaseService: MovieDatabaseService,
+    @Inject(DirectorService) private directorService: DirectorService,
+    @Inject(ActorService) private actorService: ActorService,
   ) {}
 
   async findByTitleOrCreate(title: string): Promise<Movie | null> {
@@ -48,7 +51,7 @@ export class MovieService {
     const actorsNames = omdbMovie.Actors.split(', ');
     const actors = await this.actorService.findManyByNameOrCreate(actorsNames);
 
-    const movie = new Movie({
+    const movie = this.movieFactory.create({
       imdbId: omdbMovie.imdbID,
       title: omdbMovie.Title,
       releaseDate: new Date(omdbMovie.Released),
