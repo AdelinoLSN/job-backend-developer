@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { faker } from '@faker-js/faker/.';
 
 import { MovieService } from '../movie.service';
 import { MovieRepository } from '../movie.repository';
@@ -60,13 +61,13 @@ describe(MovieService.name, () => {
 
   describe('findByTitleOrCreate', () => {
     it('should return movie from database when the movie exists in database', async () => {
-      const title = 'Inception';
+      const title = faker.book.title();
       const movie = new Movie({
-        id: 1,
-        imdbId: 'tt1375666',
-        title: 'Inception',
-        releaseDate: new Date('2010-07-16'),
-        rating: 8.8,
+        id: faker.number.int(),
+        imdbId: faker.string.alphanumeric(9),
+        title: title,
+        releaseDate: faker.date.past(),
+        rating: faker.number.float({ min: 1, max: 10 }),
         directors: [],
         actors: [],
         createdAt: new Date(),
@@ -81,22 +82,23 @@ describe(MovieService.name, () => {
     });
 
     it('should create movie when the movie does not exist in database', async () => {
-      const title = 'Inception';
-      const movieDatabaseMovies: MovieDatabaseMovie[] = [
-        {
-          Title: 'Inception',
-          imdbID: 'tt1375666',
-          Year: '2010',
-          Type: 'movie',
-        },
-      ];
+      const title = faker.book.title();
+      const movieDatabaseMovie: MovieDatabaseMovie = {
+        Title: faker.book.title(),
+        imdbID: faker.string.alphanumeric(9),
+        Year: faker.date.past().getFullYear().toString(),
+        Type: 'movie',
+      };
+      const movieDatabaseMovies: MovieDatabaseMovie[] = [movieDatabaseMovie];
       const movieDatabaseMovieDetail = {
-        imdbID: movieDatabaseMovies[0].imdbID,
-        Title: movieDatabaseMovies[0].Title,
+        imdbID: movieDatabaseMovie.imdbID,
+        Title: movieDatabaseMovie.Title,
         Released: '16 Jul 2010',
-        imdbRating: '8.8',
-        Director: 'Christopher Nolan',
-        Actors: 'Leonardo DiCaprio',
+        imdbRating: faker.number.float({ min: 1, max: 10 }).toString(),
+        Director: faker.person.fullName(),
+        Actors: Array.from({ length: 3 }, () => faker.person.fullName()).join(
+          ', ',
+        ),
       };
 
       jest.spyOn(movieRepository, 'findOneByTitle').mockResolvedValue(null);
@@ -136,21 +138,16 @@ describe(MovieService.name, () => {
     });
 
     it('should throw MultipleMoviesFoundException if multiple movies are found with different titles and does not exist on database', async () => {
-      const title = 'Inception';
-      const movieDatabaseMovies: MovieDatabaseMovie[] = [
-        {
-          Title: 'Inception 1',
-          imdbID: 'tt1375666',
-          Year: '2010',
+      const movieTitlePrefix = faker.lorem.word();
+      const movieDatabaseMovies: MovieDatabaseMovie[] = Array.from(
+        { length: 2 },
+        () => ({
+          Title: `${movieTitlePrefix} ${faker.number.int()}`,
+          imdbID: faker.string.alphanumeric(9),
+          Year: faker.date.past().getFullYear().toString(),
           Type: 'movie',
-        },
-        {
-          Title: 'Inception 2',
-          imdbID: 'tt0816692',
-          Year: '2014',
-          Type: 'movie',
-        },
-      ];
+        }),
+      );
 
       jest.spyOn(movieRepository, 'findOneByTitle').mockResolvedValue(null);
 
@@ -158,9 +155,9 @@ describe(MovieService.name, () => {
         .spyOn(movieDatabaseService, 'searchMoviesByTitle')
         .mockResolvedValue(movieDatabaseMovies);
 
-      await expect(movieService.findByTitleOrCreate(title)).rejects.toThrow(
-        MultipleMoviesFoundException,
-      );
+      await expect(
+        movieService.findByTitleOrCreate(movieTitlePrefix),
+      ).rejects.toThrow(MultipleMoviesFoundException);
     });
   });
 });
