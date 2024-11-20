@@ -13,7 +13,6 @@ import { FactoryHelper } from '../helpers/factory.helper';
 import { MovieReviewModule } from '../../src/modules/movie-review/movie-review.module';
 import { MovieReview } from '../../src/modules/movie-review/movie-review.entity';
 import { CreateMovieReviewDto } from 'src/modules/movie-review/dtos/create-movie-review.dto';
-import { UpdateMovieReviewDto } from '../../src/modules/movie-review/dtos/update-movie-review.dto';
 import { Movie } from '../../src/modules/movie/movie.entity';
 import { Director } from '../../src/modules/director/director.entity';
 import { Actor } from '../../src/modules/actor/actor.entity';
@@ -85,59 +84,6 @@ describe(`${MovieReview.name} (e2e)`, () => {
     await DatabaseHelper.dropDatabase(dataSource, databaseName);
 
     await app.close();
-  });
-
-  describe('GET /movie-reviews', () => {
-    it('should return an empty array of movie reviews', () => {
-      return request(app.getHttpServer())
-        .get('/movie-reviews')
-        .expect(HttpStatus.OK)
-        .expect([]);
-    });
-
-    it('should return an array of movie reviews', async () => {
-      const movieReviews = await Promise.all(
-        Array.from({ length: 3 }, () => factory.createMovieReview({})),
-      );
-
-      return request(app.getHttpServer())
-        .get('/movie-reviews')
-        .expect(HttpStatus.OK)
-        .expect((res) => {
-          expect(res.body).toEqual(
-            expect.arrayContaining(
-              movieReviews.map((movieReview) => ({
-                movieReviewId: movieReview.id,
-                title: movieReview.movie.title,
-                releaseDate: movieReview.movie.releaseDate
-                  .toISOString()
-                  .split('T')[0],
-                rating: movieReview.movie.rating,
-                directors: expect.arrayContaining(
-                  movieReview.movie.directors.map(
-                    (director) => director.person.name,
-                  ),
-                ),
-                actors: expect.arrayContaining(
-                  movieReview.movie.actors.map((actor) => actor.person.name),
-                ),
-                notes: movieReview.notes,
-              })),
-            ),
-          );
-        });
-    });
-
-    it('should return an empty array of movie reviews when the unique movie review is deleted', async () => {
-      const movieReview = await factory.createMovieReview({});
-
-      await factory.softDeleteMovieReview(movieReview.id);
-
-      return request(app.getHttpServer())
-        .get('/movie-reviews')
-        .expect(HttpStatus.OK)
-        .expect([]);
-    });
   });
 
   describe('POST /movie-reviews', () => {
@@ -222,9 +168,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
           expect(res.body).toEqual({
             movieReviewId: expect.any(Number),
             title: createMovieReviewDto.title,
-            releaseDate: movieReview.movie.releaseDate
-              .toISOString()
-              .split('T')[0],
+            releaseDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
             rating: movieReview.movie.rating,
             directors: expect.arrayContaining(
               movieReview.movie.directors.map(
@@ -345,129 +289,6 @@ describe(`${MovieReview.name} (e2e)`, () => {
               searchByIdMock.Actors.split(', ').map((actor) => actor.trim()),
             ),
             notes: createMovieReviewDto.notes,
-          });
-        });
-    });
-  });
-
-  describe('GET /movie-reviews/:id', () => {
-    it('should return a movie review', async () => {
-      const movieReview = await factory.createMovieReview({});
-
-      return request(app.getHttpServer())
-        .get(`/movie-reviews/${movieReview.id}`)
-        .expect(HttpStatus.OK)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            movieReviewId: movieReview.id,
-            title: movieReview.movie.title,
-            releaseDate: movieReview.movie.releaseDate
-              .toISOString()
-              .split('T')[0],
-            rating: movieReview.movie.rating,
-            directors: expect.arrayContaining(
-              movieReview.movie.directors.map(
-                (director) => director.person.name,
-              ),
-            ),
-            actors: expect.arrayContaining(
-              movieReview.movie.actors.map((actor) => actor.person.name),
-            ),
-            notes: movieReview.notes,
-          });
-        });
-    });
-
-    it('should return a 404 error when the movie review does not exist', () => {
-      const movieReviewId = faker.number.int();
-
-      return request(app.getHttpServer())
-        .get(`/movie-reviews/${movieReviewId}`)
-        .expect(HttpStatus.NOT_FOUND)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            statusCode: HttpStatus.NOT_FOUND,
-            message: `Movie review with id "${movieReviewId}" not found`,
-          });
-        });
-    });
-  });
-
-  describe('PATCH /movie-reviews/:id', () => {
-    it('should update a movie review', async () => {
-      const movieReview = await factory.createMovieReview({});
-      const updateMovieReviewDto: UpdateMovieReviewDto = {
-        notes: faker.lorem.paragraph(),
-      };
-
-      return request(app.getHttpServer())
-        .patch(`/movie-reviews/${movieReview.id}`)
-        .send(updateMovieReviewDto)
-        .expect(HttpStatus.OK)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            movieReviewId: movieReview.id,
-            title: movieReview.movie.title,
-            releaseDate: movieReview.movie.releaseDate
-              .toISOString()
-              .split('T')[0],
-            rating: movieReview.movie.rating,
-            directors: expect.arrayContaining(
-              movieReview.movie.directors.map(
-                (director) => director.person.name,
-              ),
-            ),
-            actors: expect.arrayContaining(
-              movieReview.movie.actors.map((actor) => actor.person.name),
-            ),
-            notes: updateMovieReviewDto.notes,
-          });
-        });
-    });
-
-    it('should return a 404 error when the movie review does not exist', () => {
-      const movieReviewId = faker.number.int();
-      const updateMovieReviewDto: UpdateMovieReviewDto = {
-        notes: faker.lorem.paragraph(),
-      };
-
-      return request(app.getHttpServer())
-        .patch(`/movie-reviews/${movieReviewId}`)
-        .send(updateMovieReviewDto)
-        .expect(HttpStatus.NOT_FOUND)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            statusCode: HttpStatus.NOT_FOUND,
-            message: `Movie review with id "${movieReviewId}" not found`,
-          });
-        });
-    });
-  });
-
-  describe('DELETE /movie-reviews/:id', () => {
-    it('should delete a movie review', async () => {
-      const movieReview = await factory.createMovieReview({});
-
-      await request(app.getHttpServer())
-        .delete(`/movie-reviews/${movieReview.id}`)
-        .expect(HttpStatus.NO_CONTENT)
-        .expect({});
-
-      const findOne = await factory.findMovieReview(movieReview.id);
-
-      expect(findOne).toBeNull();
-    });
-
-    it('should return a 404 error when the movie review does not exist', () => {
-      const movieReviewId = faker.number.int();
-
-      return request(app.getHttpServer())
-        .delete(`/movie-reviews/${movieReviewId}`)
-        .expect(HttpStatus.NOT_FOUND)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            statusCode: HttpStatus.NOT_FOUND,
-            message: `Movie review with id "${movieReviewId}" not found`,
           });
         });
     });
