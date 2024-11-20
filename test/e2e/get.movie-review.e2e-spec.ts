@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 import { DataSource } from 'typeorm';
+import { faker } from '@faker-js/faker';
 
 import { DatabaseHelper } from '../helpers/database.helper';
 import { FactoryHelper } from '../helpers/factory.helper';
@@ -24,7 +25,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
   let factory: FactoryHelper;
 
   beforeAll(async () => {
-    databaseName = 'movie_review_test_' + new Date().getTime();
+    databaseName = 'movie_review_test_' + faker.string.uuid().replace(/-/g, '');
 
     await DatabaseHelper.createDatabase(databaseName);
 

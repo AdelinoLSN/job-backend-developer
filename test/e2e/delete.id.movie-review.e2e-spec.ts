@@ -25,7 +25,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
   let factory: FactoryHelper;
 
   beforeAll(async () => {
-    databaseName = 'movie_review_test_' + new Date().getTime();
+    databaseName = 'movie_review_test_' + faker.string.uuid().replace(/-/g, '');
 
     await DatabaseHelper.createDatabase(databaseName);
 
