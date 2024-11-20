@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { Actor } from './actor.entity';
+import { ActorFactory } from './actor.factory';
 import { ActorRepository } from './actor.repository';
 
 import { PersonService } from '../person/person.service';
@@ -8,8 +9,9 @@ import { PersonService } from '../person/person.service';
 @Injectable()
 export class ActorService {
   constructor(
-    @Inject() private actorRepository: ActorRepository,
-    @Inject() private personService: PersonService,
+    @Inject(ActorFactory) private actorFactory: ActorFactory,
+    @Inject(ActorRepository) private actorRepository: ActorRepository,
+    @Inject(PersonService) private personService: PersonService,
   ) {}
 
   async findManyByNameOrCreate(names: string[]): Promise<Actor[]> {
@@ -25,7 +27,7 @@ export class ActorService {
           return actorAlreadyExists;
         }
 
-        const actor = new Actor({ person });
+        const actor = this.actorFactory.create({ person });
 
         return await this.actorRepository.create(actor);
       }),
