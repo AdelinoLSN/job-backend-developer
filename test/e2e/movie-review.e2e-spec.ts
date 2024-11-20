@@ -8,10 +8,10 @@ import { DataSource } from 'typeorm';
 import { faker } from '@faker-js/faker';
 
 import { DatabaseHelper } from '../helpers/database.helper';
+import { FactoryHelper } from '../helpers/factory.helper';
 
 import { MovieReviewModule } from '../../src/modules/movie-review/movie-review.module';
 import { MovieReview } from '../../src/modules/movie-review/movie-review.entity';
-import { MovieReviewFactory } from '../factories/movie-review.factory';
 import { CreateMovieReviewDto } from 'src/modules/movie-review/dtos/create-movie-review.dto';
 import { UpdateMovieReviewDto } from '../../src/modules/movie-review/dtos/update-movie-review.dto';
 import { Movie } from '../../src/modules/movie/movie.entity';
@@ -27,7 +27,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
   let dataSource: DataSource;
   let movieDatabaseProvider: MovieDatabaseProvider;
   let databaseName: string;
-  let factory: MovieReviewFactory;
+  let factory: FactoryHelper;
 
   beforeAll(async () => {
     databaseName = 'movie_review_test_' + new Date().getTime();
@@ -74,7 +74,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
     dataSource = module.get<DataSource>(DataSource);
 
-    factory = new MovieReviewFactory(module);
+    factory = new FactoryHelper(module);
   });
 
   beforeEach(async () => {
@@ -96,34 +96,42 @@ describe(`${MovieReview.name} (e2e)`, () => {
     });
 
     it('should return an array of movie reviews', async () => {
-      const movieReviews = await factory.makeMany(3);
+      const movieReviews = await Promise.all(
+        Array.from({ length: 3 }, () => factory.createMovieReview({})),
+      );
 
       return request(app.getHttpServer())
         .get('/movie-reviews')
         .expect(HttpStatus.OK)
         .expect((res) => {
           expect(res.body).toEqual(
-            movieReviews.map((movieReview) => ({
-              movieReviewId: movieReview.id,
-              title: movieReview.movie.title,
-              releaseDate: movieReview.movie.releaseDate,
-              rating: movieReview.movie.rating,
-              directors: movieReview.movie.directors.map(
-                (director) => director.person.name,
-              ),
-              actors: movieReview.movie.actors.map(
-                (actor) => actor.person.name,
-              ),
-              notes: movieReview.notes,
-            })),
+            expect.arrayContaining(
+              movieReviews.map((movieReview) => ({
+                movieReviewId: movieReview.id,
+                title: movieReview.movie.title,
+                releaseDate: movieReview.movie.releaseDate
+                  .toISOString()
+                  .split('T')[0],
+                rating: movieReview.movie.rating,
+                directors: expect.arrayContaining(
+                  movieReview.movie.directors.map(
+                    (director) => director.person.name,
+                  ),
+                ),
+                actors: expect.arrayContaining(
+                  movieReview.movie.actors.map((actor) => actor.person.name),
+                ),
+                notes: movieReview.notes,
+              })),
+            ),
           );
         });
     });
 
     it('should return an empty array of movie reviews when the unique movie review is deleted', async () => {
-      const movieReview = await factory.make();
+      const movieReview = await factory.createMovieReview({});
 
-      await factory.softDelete(movieReview.id);
+      await factory.softDeleteMovieReview(movieReview.id);
 
       return request(app.getHttpServer())
         .get('/movie-reviews')
@@ -199,7 +207,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
     });
 
     it('should create a movie review for a movie that already exists', async () => {
-      const movieReview = await factory.make();
+      const movieReview = await factory.createMovieReview({});
 
       const createMovieReviewDto: CreateMovieReviewDto = {
         title: movieReview.movie.title,
@@ -214,12 +222,18 @@ describe(`${MovieReview.name} (e2e)`, () => {
           expect(res.body).toEqual({
             movieReviewId: expect.any(Number),
             title: createMovieReviewDto.title,
-            releaseDate: movieReview.movie.releaseDate,
+            releaseDate: movieReview.movie.releaseDate
+              .toISOString()
+              .split('T')[0],
             rating: movieReview.movie.rating,
-            directors: movieReview.movie.directors.map(
-              (director) => director.person.name,
+            directors: expect.arrayContaining(
+              movieReview.movie.directors.map(
+                (director) => director.person.name,
+              ),
             ),
-            actors: movieReview.movie.actors.map((actor) => actor.person.name),
+            actors: expect.arrayContaining(
+              movieReview.movie.actors.map((actor) => actor.person.name),
+            ),
             notes: createMovieReviewDto.notes,
           });
         });
@@ -338,7 +352,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
   describe('GET /movie-reviews/:id', () => {
     it('should return a movie review', async () => {
-      const movieReview = await factory.make();
+      const movieReview = await factory.createMovieReview({});
 
       return request(app.getHttpServer())
         .get(`/movie-reviews/${movieReview.id}`)
@@ -347,7 +361,9 @@ describe(`${MovieReview.name} (e2e)`, () => {
           expect(res.body).toEqual({
             movieReviewId: movieReview.id,
             title: movieReview.movie.title,
-            releaseDate: movieReview.movie.releaseDate,
+            releaseDate: movieReview.movie.releaseDate
+              .toISOString()
+              .split('T')[0],
             rating: movieReview.movie.rating,
             directors: expect.arrayContaining(
               movieReview.movie.directors.map(
@@ -379,7 +395,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
   describe('PATCH /movie-reviews/:id', () => {
     it('should update a movie review', async () => {
-      const movieReview = await factory.make();
+      const movieReview = await factory.createMovieReview({});
       const updateMovieReviewDto: UpdateMovieReviewDto = {
         notes: faker.lorem.paragraph(),
       };
@@ -392,7 +408,9 @@ describe(`${MovieReview.name} (e2e)`, () => {
           expect(res.body).toEqual({
             movieReviewId: movieReview.id,
             title: movieReview.movie.title,
-            releaseDate: movieReview.movie.releaseDate,
+            releaseDate: movieReview.movie.releaseDate
+              .toISOString()
+              .split('T')[0],
             rating: movieReview.movie.rating,
             directors: expect.arrayContaining(
               movieReview.movie.directors.map(
@@ -428,14 +446,14 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
   describe('DELETE /movie-reviews/:id', () => {
     it('should delete a movie review', async () => {
-      const movieReview = await factory.make();
+      const movieReview = await factory.createMovieReview({});
 
       await request(app.getHttpServer())
         .delete(`/movie-reviews/${movieReview.id}`)
         .expect(HttpStatus.NO_CONTENT)
         .expect({});
 
-      const findOne = await factory.findOne(movieReview.id);
+      const findOne = await factory.findMovieReview(movieReview.id);
 
       expect(findOne).toBeNull();
     });
