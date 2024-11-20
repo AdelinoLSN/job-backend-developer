@@ -10,6 +10,7 @@ import { DirectorService } from '../../director/director.service';
 import { ActorService } from '../../actor/actor.service';
 import { Movie } from '../movie.entity';
 import { MovieDatabaseMovie } from '../../movie-database/types/movie-database-movie.types';
+import { OpenMovieDatabaseRequestException } from '../../../common/exceptions/open-movie-database-request-exception.filter';
 
 describe(MovieService.name, () => {
   let movieService: MovieService;
@@ -158,6 +159,21 @@ describe(MovieService.name, () => {
       await expect(
         movieService.findByTitleOrCreate(movieTitlePrefix),
       ).rejects.toThrow(MultipleMoviesFoundException);
+    });
+
+    it('should throw OpenMovieDatabaseRequestException if an error occurs on the provider', async () => {
+      const title = faker.book.title();
+
+      jest.spyOn(movieRepository, 'findOneByTitle').mockResolvedValue(null);
+      jest
+        .spyOn(movieDatabaseService, 'searchMoviesByTitle')
+        .mockRejectedValue(
+          new OpenMovieDatabaseRequestException(new Error() as any),
+        );
+
+      await expect(movieService.findByTitleOrCreate(title)).rejects.toThrow(
+        OpenMovieDatabaseRequestException,
+      );
     });
   });
 });
