@@ -6,7 +6,6 @@ import { MovieReviewRepository } from './movie-review.repository';
 
 import { MovieService } from '../movie/movie.service';
 import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
-import { MovieReviewResponseDto } from './dtos/movie-review-response.dto';
 
 import { MovieReviewNotFoundException } from '../../common/exceptions/movie-review-not-found-exception.filter';
 import { UpdateMovieReviewDto } from './dtos/update-movie-review.dto';
@@ -20,19 +19,15 @@ export class MovieReviewService {
 
   async findMany(
     findManyMovieReviewDto: FindManyMovieReviewDto,
-  ): Promise<MovieReviewResponseDto[]> {
+  ): Promise<MovieReview[]> {
     const movieReviews = await this.movieReviewRepository.findMany(
       findManyMovieReviewDto,
     );
 
-    return movieReviews.map((movieReview) =>
-      MovieReviewResponseDto.fromEntity(movieReview),
-    );
+    return movieReviews;
   }
 
-  async create(
-    movieReviewDto: CreateMovieReviewDto,
-  ): Promise<MovieReviewResponseDto> {
+  async create(movieReviewDto: CreateMovieReviewDto): Promise<MovieReview> {
     const movie = await this.movieService.findByTitleOrCreate(
       movieReviewDto.title,
     );
@@ -48,20 +43,23 @@ export class MovieReviewService {
         movieReview.id = createdMovieReview.id;
       });
 
-    return MovieReviewResponseDto.fromEntity(movieReview);
+    return movieReview;
   }
 
-  async findOne(id: number): Promise<MovieReviewResponseDto> {
+  async findOne(id: number): Promise<MovieReview> {
     const movieReview = await this.movieReviewRepository.findOne(id);
 
     if (!movieReview) {
       throw new MovieReviewNotFoundException(id);
     }
 
-    return MovieReviewResponseDto.fromEntity(movieReview);
+    return movieReview;
   }
 
-  async update(id: number, movieReviewDto: UpdateMovieReviewDto) {
+  async update(
+    id: number,
+    movieReviewDto: UpdateMovieReviewDto,
+  ): Promise<MovieReview> {
     const movieReview = await this.movieReviewRepository.findOne(id);
 
     if (!movieReview) {
@@ -72,7 +70,7 @@ export class MovieReviewService {
 
     await this.movieReviewRepository.update(movieReview);
 
-    return MovieReviewResponseDto.fromEntity(movieReview);
+    return movieReview;
   }
 
   async remove(id: number) {
