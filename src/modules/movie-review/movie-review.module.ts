@@ -26,6 +26,6 @@ import { TypeOrmMovieReviewRepository } from './typeorm-movie-review.repository'
       useClass: TypeOrmMovieReviewRepository,
     },
   ],
-  exports: [MovieReviewRepository],
+  exports: [MovieReviewService],
 })
 export class MovieReviewModule {}

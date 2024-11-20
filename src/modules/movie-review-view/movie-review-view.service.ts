@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { MovieReviewViewRepository } from './movie-review-view.repository';
-import { MovieReviewRepository } from '../movie-review/movie-review.repository';
 import { MovieReviewViewQueueProducer } from './movie-review-view.queue.producer';
 import { MovieReviewViewResponseDto } from './dtos/movie-review-view-response.dto';
+import { MovieReviewService } from '../movie-review/movie-review.service';
 
 @Injectable()
 export class MovieReviewViewService {
@@ -12,8 +12,8 @@ export class MovieReviewViewService {
     private queue: MovieReviewViewQueueProducer,
     @Inject(MovieReviewViewRepository)
     private movieReviewViewRepository: MovieReviewViewRepository,
-    @Inject(MovieReviewRepository)
-    private movieReviewRepository: MovieReviewRepository,
+    @Inject(MovieReviewService)
+    private movieReviewService: MovieReviewService,
   ) {}
 
   async enqueueIncrementCount(movieReviewId: number) {
@@ -21,7 +21,7 @@ export class MovieReviewViewService {
   }
 
   async create(movieReviewId: number) {
-    const movieReview = await this.movieReviewRepository.findOne(movieReviewId);
+    const movieReview = await this.movieReviewService.findOne(movieReviewId);
 
     await this.movieReviewViewRepository.create({
       movieReview: movieReview,
