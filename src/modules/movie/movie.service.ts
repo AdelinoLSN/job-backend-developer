@@ -33,29 +33,33 @@ export class MovieService {
   }
 
   private async createMovie(title: string): Promise<Movie> {
-    const omdbMovies =
+    const movieDatabaseMovies =
       await this.movieDatabaseService.searchMoviesByTitle(title);
 
-    if (omdbMovies[0].Title !== title && omdbMovies.length > 1) {
-      throw new MultipleMoviesFoundException(title, omdbMovies);
+    if (
+      movieDatabaseMovies[0].Title !== title &&
+      movieDatabaseMovies.length > 1
+    ) {
+      throw new MultipleMoviesFoundException(title, movieDatabaseMovies);
     }
 
-    const omdbMovie = await this.movieDatabaseService.searchMovieById(
-      omdbMovies[0].imdbID,
-    );
+    const movieDatabaseMovieDetails =
+      await this.movieDatabaseService.searchMovieById(
+        movieDatabaseMovies[0].imdbID,
+      );
 
-    const directorsNames = omdbMovie.Director.split(', ');
+    const directorsNames = movieDatabaseMovieDetails.Director.split(', ');
     const directors =
       await this.directorService.findManyByNameOrCreate(directorsNames);
 
-    const actorsNames = omdbMovie.Actors.split(', ');
+    const actorsNames = movieDatabaseMovieDetails.Actors.split(', ');
     const actors = await this.actorService.findManyByNameOrCreate(actorsNames);
 
     const movie = this.movieFactory.create({
-      imdbId: omdbMovie.imdbID,
-      title: omdbMovie.Title,
-      releaseDate: new Date(omdbMovie.Released),
-      rating: parseFloat(omdbMovie.imdbRating),
+      imdbId: movieDatabaseMovieDetails.imdbID,
+      title: movieDatabaseMovieDetails.Title,
+      releaseDate: new Date(movieDatabaseMovieDetails.Released),
+      rating: parseFloat(movieDatabaseMovieDetails.imdbRating),
       directors: directors,
       actors: actors,
     });
@@ -82,17 +86,16 @@ export class MovieService {
 
         await Promise.all(
           movies.map(async (movie) => {
-            const omdbMovie = await this.movieDatabaseService.searchMovieById(
-              movie.imdbId,
-            );
+            const movieDatabaseMovieDetails =
+              await this.movieDatabaseService.searchMovieById(movie.imdbId);
 
-            const omdbRating = parseFloat(omdbMovie.imdbRating);
+            const rating = parseFloat(movieDatabaseMovieDetails.imdbRating);
 
-            if (parseFloat(movie.rating.toString()) === omdbRating) {
+            if (parseFloat(movie.rating.toString()) === rating) {
               return;
             }
 
-            movie.rating = omdbRating;
+            movie.rating = rating;
 
             await this.movieRepository.update(movie);
           }),
