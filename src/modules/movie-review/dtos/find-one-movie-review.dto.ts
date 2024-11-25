@@ -2,7 +2,7 @@ import { IsInt, IsPositive } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ParamIdMovieReviewDto {
+export class FindOneMovieReviewDto {
   @IsInt()
   @IsPositive()
   @Transform(({ value }) => parseInt(value))

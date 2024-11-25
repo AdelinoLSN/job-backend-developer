@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { MovieReview } from './movie-review.entity';
+import { MovieReviewFactory } from './movie-review.factory';
 import { CreateMovieReviewDto } from './dtos/create-movie-review.dto';
 import { MovieReviewRepository } from './movie-review.repository';
 
 import { MovieService } from '../movie/movie.service';
 import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
-import { MovieReviewResponseDto } from './dtos/movie-review-response.dto';
 
 import { MovieReviewNotFoundException } from '../../common/exceptions/movie-review-not-found-exception.filter';
 import { UpdateMovieReviewDto } from './dtos/update-movie-review.dto';
@@ -14,30 +14,28 @@ import { UpdateMovieReviewDto } from './dtos/update-movie-review.dto';
 @Injectable()
 export class MovieReviewService {
   constructor(
-    @Inject() private movieReviewRepository: MovieReviewRepository,
-    @Inject() private movieService: MovieService,
+    @Inject(MovieReviewFactory) private movieReviewFactory: MovieReviewFactory,
+    @Inject(MovieReviewRepository)
+    private movieReviewRepository: MovieReviewRepository,
+    @Inject(MovieService) private movieService: MovieService,
   ) {}
 
   async findMany(
     findManyMovieReviewDto: FindManyMovieReviewDto,
-  ): Promise<MovieReviewResponseDto[]> {
+  ): Promise<MovieReview[]> {
     const movieReviews = await this.movieReviewRepository.findMany(
       findManyMovieReviewDto,
     );
 
-    return movieReviews.map((movieReview) =>
-      MovieReviewResponseDto.fromEntity(movieReview),
-    );
+    return movieReviews;
   }
 
-  async create(
-    movieReviewDto: CreateMovieReviewDto,
-  ): Promise<MovieReviewResponseDto> {
+  async create(movieReviewDto: CreateMovieReviewDto): Promise<MovieReview> {
     const movie = await this.movieService.findByTitleOrCreate(
       movieReviewDto.title,
     );
 
-    const movieReview = new MovieReview({
+    const movieReview = this.movieReviewFactory.create({
       movie: movie,
       notes: movieReviewDto.notes,
     });
@@ -48,20 +46,23 @@ export class MovieReviewService {
         movieReview.id = createdMovieReview.id;
       });
 
-    return MovieReviewResponseDto.fromEntity(movieReview);
+    return movieReview;
   }
 
-  async findOne(id: number): Promise<MovieReviewResponseDto> {
+  async findOne(id: number): Promise<MovieReview> {
     const movieReview = await this.movieReviewRepository.findOne(id);
 
     if (!movieReview) {
       throw new MovieReviewNotFoundException(id);
     }
 
-    return MovieReviewResponseDto.fromEntity(movieReview);
+    return movieReview;
   }
 
-  async update(id: number, movieReviewDto: UpdateMovieReviewDto) {
+  async update(
+    id: number,
+    movieReviewDto: UpdateMovieReviewDto,
+  ): Promise<MovieReview> {
     const movieReview = await this.movieReviewRepository.findOne(id);
 
     if (!movieReview) {
@@ -72,7 +73,7 @@ export class MovieReviewService {
 
     await this.movieReviewRepository.update(movieReview);
 
-    return MovieReviewResponseDto.fromEntity(movieReview);
+    return movieReview;
   }
 
   async remove(id: number) {

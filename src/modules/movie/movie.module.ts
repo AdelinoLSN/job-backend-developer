@@ -2,22 +2,31 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Movie } from './movie.entity';
+import { MovieFactory } from './movie.factory';
 import { MovieService } from './movie.service';
 import { MovieRepository } from './movie.repository';
 
-import { OmdbModule } from '../omdb/omdb.module';
+import { MovieDatabaseModule } from '../movie-database/movie-database.module';
 import { DirectorModule } from '../director/director.module';
 import { ActorModule } from '../actor/actor.module';
+import { TypeOrmMovieRepository } from './typeorm-movie.repository';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Movie]),
-    OmdbModule,
+    MovieDatabaseModule,
     DirectorModule,
     ActorModule,
   ],
   controllers: [],
-  providers: [MovieService, MovieRepository],
+  providers: [
+    MovieFactory,
+    MovieService,
+    {
+      provide: MovieRepository,
+      useClass: TypeOrmMovieRepository,
+    },
+  ],
   exports: [MovieService],
 })
 export class MovieModule {}

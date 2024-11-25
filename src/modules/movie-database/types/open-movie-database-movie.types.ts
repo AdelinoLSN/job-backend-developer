@@ -1,6 +1,6 @@
-export interface OmdbMovie {
+export type OpenMovieDatabaseMovie = {
   Title: string;
   Year: string;
   imdbID: string;
   Type: 'movie' | 'series' | 'episode';
-}
+};

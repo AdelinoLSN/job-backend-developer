@@ -17,9 +17,10 @@ import { CreateMovieReviewDto } from './dtos/create-movie-review.dto';
 import { UpdateMovieReviewDto } from './dtos/update-movie-review.dto';
 import { MovieReviewService } from './movie-review.service';
 import { FindManyMovieReviewDto } from './dtos/find-many-movie-review.dto';
-import { ParamIdMovieReviewDto } from './dtos/find-one-movie-review.dto';
+import { FindOneMovieReviewDto } from './dtos/find-one-movie-review.dto';
 import { RequestLogInterceptor } from '../../common/interceptors/request-log.interceptor';
 import { IncrementMovieReviewViewInterceptor } from '../../common/interceptors/increment-movie-review-views.interceptor';
+import { MovieReviewResponseDto } from './dtos/movie-review-response.dto';
 
 @Controller('movie-reviews')
 @UseInterceptors(RequestLogInterceptor)
@@ -48,8 +49,16 @@ export class MovieReviewController {
       },
     ],
   })
-  async findMany(@Query() findManyMovieReviewDto: FindManyMovieReviewDto) {
-    return this.movieReviewsService.findMany(findManyMovieReviewDto);
+  async findMany(
+    @Query() findManyMovieReviewDto: FindManyMovieReviewDto,
+  ): Promise<MovieReviewResponseDto[]> {
+    const movieReviews = await this.movieReviewsService.findMany(
+      findManyMovieReviewDto,
+    );
+
+    return movieReviews.map((movieReview) =>
+      MovieReviewResponseDto.fromEntity(movieReview),
+    );
   }
 
   @Post()
@@ -82,8 +91,13 @@ export class MovieReviewController {
       notes: 'Great movie',
     },
   })
-  async create(@Body() createMovieReviewDto: CreateMovieReviewDto) {
-    return this.movieReviewsService.create(createMovieReviewDto);
+  async create(
+    @Body() createMovieReviewDto: CreateMovieReviewDto,
+  ): Promise<MovieReviewResponseDto> {
+    const movieReview =
+      await this.movieReviewsService.create(createMovieReviewDto);
+
+    return MovieReviewResponseDto.fromEntity(movieReview);
   }
 
   @Get(':id')
@@ -106,8 +120,14 @@ export class MovieReviewController {
       notes: 'Great movie',
     },
   })
-  async findOne(@Param() paramIdMovieReviewDto: ParamIdMovieReviewDto) {
-    return this.movieReviewsService.findOne(paramIdMovieReviewDto.id);
+  async findOne(
+    @Param() paramIdMovieReviewDto: FindOneMovieReviewDto,
+  ): Promise<MovieReviewResponseDto> {
+    const movieReview = await this.movieReviewsService.findOne(
+      paramIdMovieReviewDto.id,
+    );
+
+    return MovieReviewResponseDto.fromEntity(movieReview);
   }
 
   @Patch(':id')
@@ -140,13 +160,15 @@ export class MovieReviewController {
     },
   })
   async update(
-    @Param() paramIdMovieReviewDto: ParamIdMovieReviewDto,
+    @Param() paramIdMovieReviewDto: FindOneMovieReviewDto,
     @Body() updateMovieReviewDto: UpdateMovieReviewDto,
-  ) {
-    return this.movieReviewsService.update(
+  ): Promise<MovieReviewResponseDto> {
+    const movieReview = await this.movieReviewsService.update(
       paramIdMovieReviewDto.id,
       updateMovieReviewDto,
     );
+
+    return MovieReviewResponseDto.fromEntity(movieReview);
   }
 
   @Delete(':id')
@@ -159,7 +181,7 @@ export class MovieReviewController {
     status: HttpStatus.NO_CONTENT,
     description: 'Movie review deleted',
   })
-  async remove(@Param() paramIdMovieReviewDto: ParamIdMovieReviewDto) {
+  async remove(@Param() paramIdMovieReviewDto: FindOneMovieReviewDto) {
     return this.movieReviewsService.remove(paramIdMovieReviewDto.id);
   }
 }

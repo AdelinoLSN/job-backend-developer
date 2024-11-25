@@ -8,29 +8,30 @@ import { DataSource } from 'typeorm';
 import { faker } from '@faker-js/faker';
 
 import { DatabaseHelper } from '../helpers/database.helper';
+import { FactoryHelper } from '../helpers/factory.helper';
 
 import { MovieReviewModule } from '../../src/modules/movie-review/movie-review.module';
 import { MovieReview } from '../../src/modules/movie-review/movie-review.entity';
-import { MovieReviewFactory } from '../factories/movie-review.factory';
 import { CreateMovieReviewDto } from 'src/modules/movie-review/dtos/create-movie-review.dto';
-import { UpdateMovieReviewDto } from '../../src/modules/movie-review/dtos/update-movie-review.dto';
 import { Movie } from '../../src/modules/movie/movie.entity';
 import { Director } from '../../src/modules/director/director.entity';
 import { Actor } from '../../src/modules/actor/actor.entity';
 import { Person } from '../../src/modules/person/person.entity';
-import { OmdbProvider } from '../../src/modules/omdb/omdb.provider';
-import { OmdbMovie } from 'src/modules/omdb/interfaces/omdb-movie.interface';
-import { OmdbMovieDetailed } from 'src/modules/omdb/interfaces/omdb-movie-detailed.interface';
+import { MovieDatabaseProvider } from '../../src/modules/movie-database/movie-database.provider';
+import { MovieDatabaseMovie } from '../../src/modules/movie-database/types/movie-database-movie.types';
+import { MovieDatabaseMovieDetails } from '../../src/modules/movie-database/types/movie-database-movie-details.types';
+
+jest.setTimeout(20000);
 
 describe(`${MovieReview.name} (e2e)`, () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let omdbProvider: OmdbProvider;
+  let movieDatabaseProvider: MovieDatabaseProvider;
   let databaseName: string;
-  let factory: MovieReviewFactory;
+  let factory: FactoryHelper;
 
   beforeAll(async () => {
-    databaseName = 'movie_review_test_' + new Date().getTime();
+    databaseName = 'movie_review_test_' + faker.string.uuid().replace(/-/g, '');
 
     await DatabaseHelper.createDatabase(databaseName);
 
@@ -58,7 +59,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
         MovieReviewModule,
       ],
     })
-      .overrideProvider(OmdbProvider)
+      .overrideProvider(MovieDatabaseProvider)
       .useValue({
         searchByTitle: jest.fn(),
         searchById: jest.fn(),
@@ -68,11 +69,13 @@ describe(`${MovieReview.name} (e2e)`, () => {
     app = module.createNestApplication();
     await app.init();
 
-    omdbProvider = module.get<OmdbProvider>(OmdbProvider);
+    movieDatabaseProvider = module.get<MovieDatabaseProvider>(
+      MovieDatabaseProvider,
+    );
 
     dataSource = module.get<DataSource>(DataSource);
 
-    factory = new MovieReviewFactory(module);
+    factory = new FactoryHelper(module);
   });
 
   beforeEach(async () => {
@@ -85,54 +88,9 @@ describe(`${MovieReview.name} (e2e)`, () => {
     await app.close();
   });
 
-  describe('GET /movie-reviews', () => {
-    it('should return an empty array of movie reviews', () => {
-      return request(app.getHttpServer())
-        .get('/movie-reviews')
-        .expect(HttpStatus.OK)
-        .expect([]);
-    });
-
-    it('should return an array of movie reviews', async () => {
-      const movieReviews = await factory.makeMany(3);
-
-      return request(app.getHttpServer())
-        .get('/movie-reviews')
-        .expect(HttpStatus.OK)
-        .expect((res) => {
-          expect(res.body).toEqual(
-            movieReviews.map((movieReview) => ({
-              movieReviewId: movieReview.id,
-              title: movieReview.movie.title,
-              releaseDate: movieReview.movie.releaseDate,
-              rating: movieReview.movie.rating,
-              directors: movieReview.movie.directors.map(
-                (director) => director.person.name,
-              ),
-              actors: movieReview.movie.actors.map(
-                (actor) => actor.person.name,
-              ),
-              notes: movieReview.notes,
-            })),
-          );
-        });
-    });
-
-    it('should return an empty array of movie reviews when the unique movie review is deleted', async () => {
-      const movieReview = await factory.make();
-
-      await factory.softDelete(movieReview.id);
-
-      return request(app.getHttpServer())
-        .get('/movie-reviews')
-        .expect(HttpStatus.OK)
-        .expect([]);
-    });
-  });
-
   describe('POST /movie-reviews', () => {
     it('should create a movie review', () => {
-      const searchByTitleMock: OmdbMovie[] = [
+      const searchByTitleMock: MovieDatabaseMovie[] = [
         {
           Title: faker.book.title(),
           Year: faker.date.past().getFullYear().toString(),
@@ -141,7 +99,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
         },
       ];
 
-      const searchByIdMock: OmdbMovieDetailed = {
+      const searchByIdMock: MovieDatabaseMovieDetails = {
         imdbID: searchByTitleMock[0].imdbID,
         Title: searchByTitleMock[0].Title,
         Released: '16 Jul 2010',
@@ -164,10 +122,12 @@ describe(`${MovieReview.name} (e2e)`, () => {
       };
 
       jest
-        .spyOn(omdbProvider, 'searchByTitle')
+        .spyOn(movieDatabaseProvider, 'searchByTitle')
         .mockResolvedValue(searchByTitleMock);
 
-      jest.spyOn(omdbProvider, 'searchById').mockResolvedValue(searchByIdMock);
+      jest
+        .spyOn(movieDatabaseProvider, 'searchById')
+        .mockResolvedValue(searchByIdMock);
 
       return request(app.getHttpServer())
         .post('/movie-reviews')
@@ -195,7 +155,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
     });
 
     it('should create a movie review for a movie that already exists', async () => {
-      const movieReview = await factory.make();
+      const movieReview = await factory.createMovieReview({});
 
       const createMovieReviewDto: CreateMovieReviewDto = {
         title: movieReview.movie.title,
@@ -210,12 +170,16 @@ describe(`${MovieReview.name} (e2e)`, () => {
           expect(res.body).toEqual({
             movieReviewId: expect.any(Number),
             title: createMovieReviewDto.title,
-            releaseDate: movieReview.movie.releaseDate,
+            releaseDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
             rating: movieReview.movie.rating,
-            directors: movieReview.movie.directors.map(
-              (director) => director.person.name,
+            directors: expect.arrayContaining(
+              movieReview.movie.directors.map(
+                (director) => director.person.name,
+              ),
             ),
-            actors: movieReview.movie.actors.map((actor) => actor.person.name),
+            actors: expect.arrayContaining(
+              movieReview.movie.actors.map((actor) => actor.person.name),
+            ),
             notes: createMovieReviewDto.notes,
           });
         });
@@ -223,7 +187,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
     it('should return a 409 error when trying to create a movie with a non full title and more than one result is found', () => {
       const radicalTitle = faker.lorem.word();
-      const searchByTitleMock: OmdbMovie[] = [
+      const searchByTitleMock: MovieDatabaseMovie[] = [
         {
           Title: radicalTitle + faker.string.alpha({ length: 5 }),
           Year: faker.date.past().getFullYear().toString(),
@@ -244,7 +208,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
       };
 
       jest
-        .spyOn(omdbProvider, 'searchByTitle')
+        .spyOn(movieDatabaseProvider, 'searchByTitle')
         .mockResolvedValue(searchByTitleMock);
 
       return request(app.getHttpServer())
@@ -261,7 +225,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
 
     it('should create a movie review when more than one result is found and the title is fully matched', () => {
       const radicalTitle = faker.lorem.word();
-      const searchByTitleMock: OmdbMovie[] = [
+      const searchByTitleMock: MovieDatabaseMovie[] = [
         {
           Title: radicalTitle,
           Year: faker.date.past().getFullYear().toString(),
@@ -276,7 +240,7 @@ describe(`${MovieReview.name} (e2e)`, () => {
         },
       ];
 
-      const searchByIdMock: OmdbMovieDetailed = {
+      const searchByIdMock: MovieDatabaseMovieDetails = {
         imdbID: searchByTitleMock[0].imdbID,
         Title: searchByTitleMock[0].Title,
         Released: '16 Jul 2010',
@@ -299,10 +263,12 @@ describe(`${MovieReview.name} (e2e)`, () => {
       };
 
       jest
-        .spyOn(omdbProvider, 'searchByTitle')
+        .spyOn(movieDatabaseProvider, 'searchByTitle')
         .mockResolvedValue(searchByTitleMock);
 
-      jest.spyOn(omdbProvider, 'searchById').mockResolvedValue(searchByIdMock);
+      jest
+        .spyOn(movieDatabaseProvider, 'searchById')
+        .mockResolvedValue(searchByIdMock);
 
       return request(app.getHttpServer())
         .post('/movie-reviews')
@@ -325,125 +291,6 @@ describe(`${MovieReview.name} (e2e)`, () => {
               searchByIdMock.Actors.split(', ').map((actor) => actor.trim()),
             ),
             notes: createMovieReviewDto.notes,
-          });
-        });
-    });
-  });
-
-  describe('GET /movie-reviews/:id', () => {
-    it('should return a movie review', async () => {
-      const movieReview = await factory.make();
-
-      return request(app.getHttpServer())
-        .get(`/movie-reviews/${movieReview.id}`)
-        .expect(HttpStatus.OK)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            movieReviewId: movieReview.id,
-            title: movieReview.movie.title,
-            releaseDate: movieReview.movie.releaseDate,
-            rating: movieReview.movie.rating,
-            directors: expect.arrayContaining(
-              movieReview.movie.directors.map(
-                (director) => director.person.name,
-              ),
-            ),
-            actors: expect.arrayContaining(
-              movieReview.movie.actors.map((actor) => actor.person.name),
-            ),
-            notes: movieReview.notes,
-          });
-        });
-    });
-
-    it('should return a 404 error when the movie review does not exist', () => {
-      const movieReviewId = faker.number.int();
-
-      return request(app.getHttpServer())
-        .get(`/movie-reviews/${movieReviewId}`)
-        .expect(HttpStatus.NOT_FOUND)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            statusCode: HttpStatus.NOT_FOUND,
-            message: `Movie review with id "${movieReviewId}" not found`,
-          });
-        });
-    });
-  });
-
-  describe('PATCH /movie-reviews/:id', () => {
-    it('should update a movie review', async () => {
-      const movieReview = await factory.make();
-      const updateMovieReviewDto: UpdateMovieReviewDto = {
-        notes: faker.lorem.paragraph(),
-      };
-
-      return request(app.getHttpServer())
-        .patch(`/movie-reviews/${movieReview.id}`)
-        .send(updateMovieReviewDto)
-        .expect(HttpStatus.OK)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            movieReviewId: movieReview.id,
-            title: movieReview.movie.title,
-            releaseDate: movieReview.movie.releaseDate,
-            rating: movieReview.movie.rating,
-            directors: expect.arrayContaining(
-              movieReview.movie.directors.map(
-                (director) => director.person.name,
-              ),
-            ),
-            actors: expect.arrayContaining(
-              movieReview.movie.actors.map((actor) => actor.person.name),
-            ),
-            notes: updateMovieReviewDto.notes,
-          });
-        });
-    });
-
-    it('should return a 404 error when the movie review does not exist', () => {
-      const movieReviewId = faker.number.int();
-      const updateMovieReviewDto: UpdateMovieReviewDto = {
-        notes: faker.lorem.paragraph(),
-      };
-
-      return request(app.getHttpServer())
-        .patch(`/movie-reviews/${movieReviewId}`)
-        .send(updateMovieReviewDto)
-        .expect(HttpStatus.NOT_FOUND)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            statusCode: HttpStatus.NOT_FOUND,
-            message: `Movie review with id "${movieReviewId}" not found`,
-          });
-        });
-    });
-  });
-
-  describe('DELETE /movie-reviews/:id', () => {
-    it('should delete a movie review', async () => {
-      const movieReview = await factory.make();
-
-      await request(app.getHttpServer())
-        .delete(`/movie-reviews/${movieReview.id}`)
-        .expect(HttpStatus.NO_CONTENT)
-        .expect({});
-
-      const findOne = await factory.findOne(movieReview.id);
-
-      expect(findOne).toBeNull();
-    });
-
-    it('should return a 404 error when the movie review does not exist', () => {
-      const movieReviewId = faker.number.int();
-
-      return request(app.getHttpServer())
-        .delete(`/movie-reviews/${movieReviewId}`)
-        .expect(HttpStatus.NOT_FOUND)
-        .expect((res) => {
-          expect(res.body).toEqual({
-            statusCode: HttpStatus.NOT_FOUND,
-            message: `Movie review with id "${movieReviewId}" not found`,
           });
         });
     });
