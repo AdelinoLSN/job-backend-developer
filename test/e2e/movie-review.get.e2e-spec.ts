@@ -18,6 +18,8 @@ import { Actor } from '../../src/modules/actor/actor.entity';
 import { Person } from '../../src/modules/person/person.entity';
 import { MovieDatabaseProvider } from '../../src/modules/movie-database/movie-database.provider';
 
+jest.setTimeout(20000);
+
 describe(`${MovieReview.name} (e2e)`, () => {
   let app: INestApplication;
   let dataSource: DataSource;

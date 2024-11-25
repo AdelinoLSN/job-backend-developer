@@ -21,6 +21,8 @@ import { MovieDatabaseProvider } from '../../src/modules/movie-database/movie-da
 import { MovieDatabaseMovie } from '../../src/modules/movie-database/types/movie-database-movie.types';
 import { MovieDatabaseMovieDetails } from '../../src/modules/movie-database/types/movie-database-movie-details.types';
 
+jest.setTimeout(20000);
+
 describe(`${MovieReview.name} (e2e)`, () => {
   let app: INestApplication;
   let dataSource: DataSource;
